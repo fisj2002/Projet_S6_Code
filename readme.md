@@ -32,7 +32,7 @@ nombreDePieds
 jaune
 portTx
 ```
-##### Variables
+##### Fonctions
 Les noms de fonction sont étrit en *camel* case avec la première lettre en majuscule. On essai d'utiliser un verbe d'action pour décrire l'effet de la fonction.
 ```
 ComptePieds
