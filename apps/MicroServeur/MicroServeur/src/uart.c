@@ -206,6 +206,41 @@ bool StartTxUart1()
 	return true;
 }
 
+/** 
+	Retrieve the number of bytes in the reception buffer
+*/
+int GetRxCountUart0()
+{
+	return rxBuffer0.byteCount;
+}
+
+int GetRxCountUart1()
+{
+	return rxBuffer1.byteCount;
+}
+
+/** 
+	Read  and consume Rx buffer.
+	The specified number of bytes is copied to the destination.
+	Returns the number of bytes copied
+*/
+int ExtractRxUart0(char * destination, int length)
+{
+	int byteCount = 0;
+	
+	while(byteCount++ < length && ReadFIFO(&rxBuffer0, destination++));
+	
+	return byteCount;
+}
+
+int ExtractRxUart1(char * destination, int length)
+{
+	int byteCount = 0;
+	
+	while(byteCount++ < length && ReadFIFO(&rxBuffer1, destination++));
+	
+	return byteCount;
+}
 
 // The byte reception interrupt subroutine
 ISR(USART0_RX_vect) 

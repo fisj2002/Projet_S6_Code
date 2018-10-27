@@ -82,3 +82,16 @@ bool ReadFIFO (volatile FifoBuffer_t* buffer, char * element)
 	return true;
 }
 
+/** 
+	Reads the next byte without removing it.
+	Returns false if the fifo is empty.
+*/
+bool PeekFIFO (volatile FifoBuffer_t* buffer, char * element)
+{
+	if (buffer->byteCount <= 0)
+		return false;
+		
+	*element = *(buffer->head);
+	
+	return true;
+}

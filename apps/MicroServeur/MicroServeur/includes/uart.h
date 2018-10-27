@@ -23,6 +23,10 @@ int SendnUart1(char * message, int length);
 bool StartTxUart0();
 bool StartTxUart1();
 
+int GetRxCountUart0();
+int GetRxCountUart1();
 
+int ExtractRxUart0(char * destination, int length);
+int ExtractRxUart1(char * destination, int length);
 
 #endif /* UART_H_ */
