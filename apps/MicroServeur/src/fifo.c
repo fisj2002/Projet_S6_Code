@@ -11,7 +11,7 @@
 /************************************************************************/
 /* Private methods                                                      */
 /************************************************************************/                                
-char * NextAddr(volatile FifoBuffer_t* buffer, char * addr)
+char * NextAddr(const volatile FifoBuffer_t* buffer, const char * addr)
 {
 	++addr;
 	
@@ -25,7 +25,7 @@ char * NextAddr(volatile FifoBuffer_t* buffer, char * addr)
 /************************************************************************/
 /* FiFo methods                                                         */
 /************************************************************************/
-FifoBuffer_t CreateFIFO(char * memoryLocation, size_t size)
+FifoBuffer_t CreateFIFO(const char * memoryLocation, size_t size)
 {
 	FifoBuffer_t structure =
 	{
@@ -86,7 +86,7 @@ bool ReadFIFO (volatile FifoBuffer_t* buffer, char * element)
 	Reads the next byte without removing it.
 	Returns false if the fifo is empty.
 */
-bool PeekFIFO (volatile FifoBuffer_t* buffer, char * element)
+bool PeekFIFO (const volatile FifoBuffer_t* buffer, char * element)
 {
 	if (buffer->byteCount <= 0)
 		return false;

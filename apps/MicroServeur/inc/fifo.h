@@ -24,7 +24,7 @@ typedef struct
 } FifoBuffer_t;
 
 
-FifoBuffer_t CreateFIFO(char * memoryLocation, size_t size);
+FifoBuffer_t CreateFIFO(const char * memoryLocation, size_t size);
 
 void ClearFIFO(volatile FifoBuffer_t* buffer);
 
@@ -32,7 +32,7 @@ bool AppendFIFO (volatile FifoBuffer_t* buffer, char newElement);
 
 bool ReadFIFO (volatile FifoBuffer_t* buffer, char * element);
 
-bool PeekFIFO (volatile FifoBuffer_t* buffer, char * element);
+bool PeekFIFO (const volatile FifoBuffer_t* buffer, char * element);
 
 
 #endif /* FIFO_H_ */

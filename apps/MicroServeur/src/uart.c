@@ -11,24 +11,38 @@
 #include "fifo.h"
 
 
-// Max number of characters
-#define TX_BUFFER_SIZE 256
-#define RX_BUFFER_SIZE 256
 
-
+// Flag to keep track of whether characters are queued to be sent
 bool isSending0 = false;
 bool isSending1 = false;
 
+// Data buffers used to track packets about to be transfered
 char rxData0[RX_BUFFER_SIZE];
 char txData0[TX_BUFFER_SIZE];
 char rxData1[RX_BUFFER_SIZE];
 char txData1[TX_BUFFER_SIZE];
 
+// Buffer parameters used to create queues
 volatile FifoBuffer_t rxBuffer0;
 volatile FifoBuffer_t txBuffer0;
 volatile FifoBuffer_t rxBuffer1;
 volatile FifoBuffer_t txBuffer1;
 
+// Interrupt vectors to be called when packet is received
+void (*iVector0)(char) = 0;
+void (*iVector1)(char) = 0;
+
+
+/************************************************************************/
+/* Private prototypes                                                   */
+/************************************************************************/
+bool StartTxUart0();
+bool StartTxUart1();
+
+
+/************************************************************************/
+/* Function declarations                                                */
+/************************************************************************/
 
 
 void InitUart_0 (uint16_t baudrate)
@@ -94,10 +108,26 @@ void InitUart_1 (uint16_t baudrate)
 }
 
 /** 
+	Set a function to be executed everytime a new character is received
+	The character is still added to the reception buffer.
+	The character is added to the buffer before calling this interrupt vector
+	Keep the functions short to avoid interrupt collision
+	To disable the interrupt pass a 0 pointer
+*/
+void SetRxInterruptUart0 (void(*iVector)(char))
+{
+	iVector0 = iVector;
+}
+void SetRxInterruptUart1 (void(*iVector)(char))
+{
+	iVector1 = iVector;
+}
+
+/** 
 	Sends a 0 ended String over the uart port using interrupts
 	Returns the number of characters that were sent
 */
-int SendUart0(char * message)
+int SendUart0(const char * message)
 {
 	int bytesQueued = 0;
 	
@@ -116,7 +146,7 @@ int SendUart0(char * message)
 	return bytesQueued;
 }
 
-int SendUart1(char * message)
+int SendUart1(const char * message)
 {
 	int bytesQueued = 0;
 	
@@ -139,7 +169,7 @@ int SendUart1(char * message)
 	Sends an array of characters of fixed length.
 	Returns the numbers of characters queued
 */
-int SendnUart0(char * message, int length)
+int SendnUart0(const char * message, int length)
 {
 	int bytesQueued = 0;
 	
@@ -151,7 +181,7 @@ int SendnUart0(char * message, int length)
 	return bytesQueued;
 }
 
-int SendnUart1(char * message, int length)
+int SendnUart1(const char * message, int length)
 {
 	int bytesQueued = 0;
 	
@@ -242,12 +272,37 @@ int ExtractRxUart1(char * destination, int length)
 	return byteCount;
 }
 
+/** 
+	Resets the Rx Buffer
+	Returns the number of characters removed
+*/
+int FlushRxUart0()
+{
+	int flushed = rxBuffer0.byteCount;
+	
+	ClearFIFO(&rxBuffer0);
+	
+	return flushed;
+}
+int FlushRxUart1()
+{
+	int flushed = rxBuffer1.byteCount;
+	
+	ClearFIFO(&rxBuffer1);
+	
+	return flushed;
+}
+
 // The byte reception interrupt subroutine
 ISR(USART0_RX_vect) 
 {
 	char in = UDR0;
 	
 	AppendFIFO(&rxBuffer0, in);
+	
+	// Call user-defined interrupt vector if any
+	if (iVector0)
+		(*iVector0)(in);
 }
 
 ISR(USART1_RX_vect)
@@ -255,6 +310,9 @@ ISR(USART1_RX_vect)
 	char in = UDR1;
 	
 	AppendFIFO(&rxBuffer1, in);
+	
+	if (iVector1)
+		(*iVector1)(in);
 }
 
 // Keep sending bytes after until the buffer is empty 

@@ -11,22 +11,32 @@
 
 #include <stdbool.h>
 
+
+// Max number of characters
+#define TX_BUFFER_SIZE 256
+#define RX_BUFFER_SIZE 256
+
+
+
 void InitUart_0 (uint16_t baudrate);
 void InitUart_1 (uint16_t baudrate);
 
-int SendUart0 (char * message);
-int SendUart1 (char * message);
+void SetRxInterruptUart0 (void(*iVector)(char));
+void SetRxInterruptUart1 (void(*iVector)(char));
 
-int SendnUart0(char * message, int length);
-int SendnUart1(char * message, int length);
+int SendUart0 (const char * message);
+int SendUart1 (const char * message);
 
-bool StartTxUart0();
-bool StartTxUart1();
+int SendnUart0(const char * message, int length);
+int SendnUart1(const char * message, int length);
 
 int GetRxCountUart0();
 int GetRxCountUart1();
 
 int ExtractRxUart0(char * destination, int length);
 int ExtractRxUart1(char * destination, int length);
+
+int FlushRxUart0();
+int FlushRxUart1();
 
 #endif /* UART_H_ */

@@ -9,27 +9,27 @@
 #include <avr/io.h>
 #include <avr/interrupt.h>
 #include <uart.h>
+#include <stdio.h>
 
 volatile uint8_t CTC_flag;
+
+
+char copyBuffer[RX_BUFFER_SIZE];
+
 
 ISR(TIMER1_COMPA_vect) {
 	CTC_flag = 1;
 }
 
-void Board_Init(void) {
-	
-	cli(); // Disable interrupts
-	
-	// Disable watchdog timer
-	asm("wdr");
-	MCUSR = 0;
-	WDTCSR |= (1 << WDCE) | (1 << WDE);
-	WDTCSR = 0x00;
-	
-	
-	DDRB = 0x10; //PB4 output
-	PORTB |= 0x10; //Turn off LED
+// User-defined interrupt function
+void RxEchoISR(char receivedChar)
+{
+	// Simply echoes what the user typed in
+	SendnUart1(&receivedChar, 1);
+	if (receivedChar == '\r')
+		SendUart1("\n");
 }
+
 
 void Timer_Init(void) {
 	
@@ -37,10 +37,6 @@ void Timer_Init(void) {
 	TCCR1A = 0x00; //Timer not connected to any pins
 	TCCR1B = 0x09; //CTC mode; Timer_Rate = System_CLK = 1MHz
 	// 1 tick = 1 us
-}
-
-void LED_Toggle(void) {
-	PORTB ^= 0x10; //Toggle PB4
 }
 
 void Delay(uint16_t us) {
@@ -51,26 +47,32 @@ void Delay(uint16_t us) {
 	while(!CTC_flag); //wait for the designated number of us
 }
 
-
-
 int main(void)
 {
-	Board_Init();
 	Timer_Init();
 	
 	InitUart_1(9600);
 	SendUart1 ("Hello World!\n\r");
-	
+	SetRxInterruptUart1(&RxEchoISR);
 	
     while(1)
     {
-        
-		
-		LED_Toggle();
-		
-		// Wait 0.5 seconds
-		for(int i=0; i<(10*16); i++){
+		// Wait 10 seconds
+		for(int i=0; i<(200*16); i++)
+		{
 			Delay(50000); 
 		}
+		
+
+		int numChar = GetRxCountUart1();
+		
+		int charCout = sprintf(copyBuffer,"\r\nSince the last 10 seconds, you sent %d bytes:\r\n", numChar);
+		SendnUart1(copyBuffer, charCout);
+		
+		ExtractRxUart1(copyBuffer, numChar);
+		SendnUart1(copyBuffer, numChar);
+		SendUart1("\r\n");
+		
+		FlushRxUart1();
     }
 }
