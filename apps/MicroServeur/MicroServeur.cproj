@@ -108,7 +108,7 @@
   </avrgcc.compiler.symbols.DefSymbols>
   <avrgcc.compiler.directories.IncludePaths>
     <ListValues>
-      <Value>../includes</Value>
+      <Value>../inc</Value>
     </ListValues>
   </avrgcc.compiler.directories.IncludePaths>
   <avrgcc.compiler.optimization.level>Optimize (-O1)</avrgcc.compiler.optimization.level>
@@ -121,9 +121,14 @@
       <Value>libm</Value>
     </ListValues>
   </avrgcc.linker.libraries.Libraries>
+  <avrgcc.linker.libraries.LibrarySearchPaths>
+    <ListValues>
+      <Value>../../../uart</Value>
+    </ListValues>
+  </avrgcc.linker.libraries.LibrarySearchPaths>
   <avrgcc.assembler.general.IncludePaths>
     <ListValues>
-      <Value>../includes</Value>
+      <Value>../inc</Value>
     </ListValues>
   </avrgcc.assembler.general.IncludePaths>
   <avrgcc.assembler.debugging.DebugLevel>Default (-Wa,-g)</avrgcc.assembler.debugging.DebugLevel>
@@ -131,13 +136,13 @@
     </ToolchainSettings>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="includes\fifo.h">
+    <Compile Include="inc\fifo.h">
       <SubType>compile</SubType>
     </Compile>
-    <Compile Include="includes\system.h">
+    <Compile Include="inc\system.h">
       <SubType>compile</SubType>
     </Compile>
-    <Compile Include="includes\uart.h">
+    <Compile Include="inc\uart.h">
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="src\fifo.c">
@@ -151,7 +156,7 @@
     </Compile>
   </ItemGroup>
   <ItemGroup>
-    <Folder Include="includes" />
+    <Folder Include="inc" />
     <Folder Include="src" />
   </ItemGroup>
   <Import Project="$(AVRSTUDIO_EXE_PATH)\\Vs\\Compiler.targets" />

@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 11.00
 # Atmel Studio Solution File, Format Version 11.00
-Project("{54F91283-7BC4-4236-8FF9-10F437C3AD48}") = "MicroServeur", "MicroServeur\MicroServeur.cproj", "{0527992D-A54D-4F8B-8D1F-4DFD94FDDCE1}"
+Project("{54F91283-7BC4-4236-8FF9-10F437C3AD48}") = "MicroServeur", "MicroServeur.cproj", "{0527992D-A54D-4F8B-8D1F-4DFD94FDDCE1}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
