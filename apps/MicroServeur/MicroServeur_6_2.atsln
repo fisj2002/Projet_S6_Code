@@ -1,0 +1,20 @@
+
+Microsoft Visual Studio Solution File, Format Version 11.00
+# Atmel Studio Solution File, Format Version 11.00
+Project("{54F91283-7BC4-4236-8FF9-10F437C3AD48}") = "MicroServeur", "MicroServeur_6_2.cproj", "{0527992D-A54D-4F8B-8D1F-4DFD94FDDCE1}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|AVR = Debug|AVR
+		Release|AVR = Release|AVR
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{0527992D-A54D-4F8B-8D1F-4DFD94FDDCE1}.Debug|AVR.ActiveCfg = Debug|AVR
+		{0527992D-A54D-4F8B-8D1F-4DFD94FDDCE1}.Debug|AVR.Build.0 = Debug|AVR
+		{0527992D-A54D-4F8B-8D1F-4DFD94FDDCE1}.Release|AVR.ActiveCfg = Release|AVR
+		{0527992D-A54D-4F8B-8D1F-4DFD94FDDCE1}.Release|AVR.Build.0 = Release|AVR
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal
