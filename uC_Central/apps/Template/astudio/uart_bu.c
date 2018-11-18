@@ -7,8 +7,26 @@
 
 #include "uart.h"
 
-UART_System UART0;
-UART_System UART1;
+// Flag to keep track of whether characters are queued to be sent
+bool isSending0 = false;
+bool isSending1 = false;
+
+// Data buffers used to track packets about to be transfered
+char rxData0[RX_BUFFER_SIZE];
+char txData0[TX_BUFFER_SIZE];
+char rxData1[RX_BUFFER_SIZE];
+char txData1[TX_BUFFER_SIZE];
+
+// Buffer parameters used to create queues
+volatile FifoBuffer_t rxBuffer0;
+volatile FifoBuffer_t txBuffer0;
+volatile FifoBuffer_t rxBuffer1;
+volatile FifoBuffer_t txBuffer1;
+
+// Interrupt vectors to be called when packet is received
+void (*iVector0)(char) = 0;
+void (*iVector1)(char) = 0;
+
 
 /************************************************************************/
 /* Private prototypes                                                   */
@@ -24,9 +42,6 @@ bool StartTxUart1();
 
 void InitUart_0 (uint16_t baudrate)
 {
-	// Setting UART ID
-	UART0.ID = 0;
-	
 	// Set baudrate for asynchronous double speed mode
 	uint16_t baudRateSetting = (uint16_t) (CPU_CLK_HZ / 8 / baudrate) - 1;
 	UBRR0H = (baudRateSetting >> 8) && 0xff;
@@ -44,12 +59,8 @@ void InitUart_0 (uint16_t baudrate)
 	UCSR0C |= 3 << UCSZ00;		// 8 bit word size
 	
 	// Setting up buffers
-	UART0.rxBuffer = CreateFIFO(UART0.rxData, RX_BUFFER_SIZE);
-	UART0.txBuffer = CreateFIFO(UART0.txData, TX_BUFFER_SIZE);
-	
-	//Initializing default value
-	UART0.isSending = false;
-	UART0.iVector = 0;
+	rxBuffer0 = CreateFIFO(rxData0, RX_BUFFER_SIZE);
+	txBuffer0 = CreateFIFO(txData0, TX_BUFFER_SIZE);
 	
 	// Enable interrupts
 	UCSR0B |= 1 << RXCIE0;	// Receive complete interrupt
@@ -62,9 +73,6 @@ void InitUart_0 (uint16_t baudrate)
 
 void InitUart_1 (uint16_t baudrate)
 {
-	// Setting UART ID
-	UART1.ID = 1;
-	
 	// Set baudrate for asynchronous double speed mode
 	uint16_t baudRateSetting = (uint16_t) (CPU_CLK_HZ / 8 / baudrate) - 1;
 	UBRR1H = (baudRateSetting >> 8) && 0xff;
@@ -82,12 +90,8 @@ void InitUart_1 (uint16_t baudrate)
 	UCSR1C |= 3 << UCSZ10;		// 8 bit word size
 	
 	// Setting up buffers
-	UART1.rxBuffer = CreateFIFO(UART1.rxData, RX_BUFFER_SIZE);
-	UART1.txBuffer = CreateFIFO(UART1.txData, TX_BUFFER_SIZE);	
-		
-	//Initializing default value
-	UART1.isSending = false;
-	UART1.iVector = 0;
+	rxBuffer1 = CreateFIFO(rxData1, RX_BUFFER_SIZE);
+	txBuffer1 = CreateFIFO(txData1, TX_BUFFER_SIZE);	
 	
 	// Enable interrupts
 	UCSR1B |= 1 << RXCIE1;	// Receive complete interrupt
@@ -105,22 +109,24 @@ void InitUart_1 (uint16_t baudrate)
 	Keep the functions short to avoid interrupt collision
 	To disable the interrupt pass a 0 pointer
 */
-
-void SetRxInterruptUart (UART_System UART, void(*iVector)(char))
+void SetRxInterruptUart0 (void(*iVector)(char))
 {
-	UART.iVector = iVector;
+	iVector0 = iVector;
+}
+void SetRxInterruptUart1 (void(*iVector)(char))
+{
+	iVector1 = iVector;
 }
 
 /** 
 	Sends a 0 ended String over the uart port using interrupts
 	Returns the number of characters that were sent
 */
-
-int SendUart(UART_System UART, const char * message)
+int SendUart0(const char * message)
 {
 	int bytesQueued = 0;
 	
-	while(AppendFIFO(&UART.txBuffer, *message))
+	while(AppendFIFO(&txBuffer0, *message))
 	{
 		++ bytesQueued;
 		
@@ -130,7 +136,26 @@ int SendUart(UART_System UART, const char * message)
 		++message;
 	}
 	
-	StartTxUart(UART);
+	StartTxUart0();
+	
+	return bytesQueued;
+}
+
+int SendUart1(const char * message)
+{
+	int bytesQueued = 0;
+	
+	while(AppendFIFO(&txBuffer1, *message))
+	{
+		++ bytesQueued;
+		
+		if(*message == 0)
+			break;
+		
+		++message;
+	}
+	
+	StartTxUart1();
 	
 	return bytesQueued;
 }
@@ -139,48 +164,46 @@ int SendUart(UART_System UART, const char * message)
 	Sends an array of characters of fixed length.
 	Returns the numbers of characters queued
 */
-
-int SendnUart(UART_System UART, const char * message, int length)
+int SendnUart0(const char * message, int length)
 {
 	int bytesQueued = 0;
 	
-	while(bytesQueued < length && AppendFIFO(&UART.txBuffer, *message++))
+	while(bytesQueued < length && AppendFIFO(&txBuffer0, *message++))
 		++ bytesQueued;
 	
-	StartTxUart(UART);
+	StartTxUart0();
 	
 	return bytesQueued;
 }
 
-/** 
-	Start sending bytes if the none were being sent.
-	Returns false if uart is already sending, the buffer is empty or an invalid UART parameter is sent.
-*/
-
-int StartTxUart(UART_System UART)
+int SendnUart1(const char * message, int length)
 {
-	switch (UART.ID)
-	{
-		case 0:
-			return StartTxUart0();
-		case 1:
-			return StartTxUart1();
-		default:
-			return false;
-	}
+	int bytesQueued = 0;
+	
+	while(bytesQueued < length && AppendFIFO(&txBuffer1, *message++))
+		++ bytesQueued;
+	
+	StartTxUart1();
+	
+	return bytesQueued;
 }
 
+
+/** 
+	Start sending bytes if the none were being sent.
+	Returns false if uart is already sending or the buffer is empty.
+*/
 bool StartTxUart0()
 {
-	if (UART0.isSending)
+	if (isSending0)
 		return false;
 		
 	char charToSend;
 		
-	if (!ReadFIFO(&UART0.txBuffer, &charToSend))
+	if (!ReadFIFO(&txBuffer0, &charToSend))
 		return false;
 		
-	UART0.isSending = true;	
+	isSending0 = true;	
 	while ( !( UCSR0A & (1 << UDRE0)) );
 	UDR0 = charToSend;
 	
@@ -191,15 +214,15 @@ bool StartTxUart0()
 
 bool StartTxUart1()
 {
-	if (UART1.isSending)
+	if (isSending1)
 	return false;
 	
 	char charToSend;
 	
-	if (!ReadFIFO(&UART1.txBuffer, &charToSend))
+	if (!ReadFIFO(&txBuffer1, &charToSend))
 	return false;
 	
-	UART1.isSending = true;
+	isSending1 = true;
 	while ( !( UCSR1A & (1 << UDRE1)) );
 	UDR1 = charToSend;
 	
@@ -211,9 +234,14 @@ bool StartTxUart1()
 /** 
 	Retrieve the number of bytes in the reception buffer
 */
-int GetRxCountUart(UART_System UART)
+int GetRxCountUart0()
 {
-	return UART.rxBuffer.byteCount;
+	return rxBuffer0.byteCount;
+}
+
+int GetRxCountUart1()
+{
+	return rxBuffer1.byteCount;
 }
 
 /** 
@@ -221,12 +249,20 @@ int GetRxCountUart(UART_System UART)
 	The specified number of bytes is copied to the destination.
 	Returns the number of bytes copied
 */
-
-int ExtractRxUart(UART_System UART, char * destination, int length)
+int ExtractRxUart0(char * destination, int length)
 {
 	int byteCount = 0;
 	
-	while(byteCount++ < length && ReadFIFO(&UART.rxBuffer, destination++));
+	while(byteCount++ < length && ReadFIFO(&rxBuffer0, destination++));
+	
+	return byteCount;
+}
+
+int ExtractRxUart1(char * destination, int length)
+{
+	int byteCount = 0;
+	
+	while(byteCount++ < length && ReadFIFO(&rxBuffer1, destination++));
 	
 	return byteCount;
 }
@@ -235,12 +271,19 @@ int ExtractRxUart(UART_System UART, char * destination, int length)
 	Resets the Rx Buffer
 	Returns the number of characters removed
 */
-
-int FlushRxUart(UART_System UART)
+int FlushRxUart0()
 {
-	int flushed = UART.rxBuffer.byteCount;
+	int flushed = rxBuffer0.byteCount;
 	
-	ClearFIFO(&UART.rxBuffer);
+	ClearFIFO(&rxBuffer0);
+	
+	return flushed;
+}
+int FlushRxUart1()
+{
+	int flushed = rxBuffer1.byteCount;
+	
+	ClearFIFO(&rxBuffer1);
 	
 	return flushed;
 }
@@ -250,21 +293,21 @@ ISR(USART0_RX_vect)
 {
 	char in = UDR0;
 	
-	AppendFIFO(&UART0.rxBuffer, in);
+	AppendFIFO(&rxBuffer0, in);
 	
 	// Call user-defined interrupt vector if any
-	if (UART0.iVector)
-		(*UART0.iVector)(in);
+	if (iVector0)
+		(*iVector0)(in);
 }
 
 ISR(USART1_RX_vect)
 {
 	char in = UDR1;
 	
-	AppendFIFO(&UART1.rxBuffer, in);
+	AppendFIFO(&rxBuffer1, in);
 	
-	if (UART1.iVector)
-		(*UART1.iVector)(in);
+	if (iVector1)
+		(*iVector1)(in);
 }
 
 // Keep sending bytes after until the buffer is empty 
@@ -272,11 +315,11 @@ ISR(USART0_UDRE_vect)
 {
 	char nextChar;
 	
-	if(ReadFIFO(&UART0.txBuffer, &nextChar))
+	if(ReadFIFO(&txBuffer0, &nextChar))
 		UDR0 = nextChar;
 	else
 	{
-		UART0.isSending = false;
+		isSending0 = false;
 		UCSR0B &= ~(1 << UDRIE0); //disable UDR empty interrupt
 	}	
 }
@@ -285,11 +328,11 @@ ISR(USART1_UDRE_vect)
 {
 	char nextChar;
 	
-	if(ReadFIFO(&UART1.txBuffer, &nextChar))
+	if(ReadFIFO(&txBuffer1, &nextChar))
 		UDR1 = nextChar;
 	else
 	{
-		UART1.isSending = false;
+		isSending1 = false;
 		UCSR1B &= ~(1 << UDRIE1); //disable UDR empty interrupt
 	}
 }

@@ -47,6 +47,8 @@
 /*- Includes ---------------------------------------------------------------*/
 #include "sys.h"
 #include "phy.h"
+#include "uart.h"
+#include "timer.h"
 #include <stdio.h>
 #include <stdarg.h>
 
@@ -78,7 +80,7 @@ PHY_DataInd_t ind; //cet objet contiendra les informations concernant le dernier
 
 /*************************************************************************//**
 *****************************************************************************/
-static void APP_TaskHandler(void)
+/*static void APP_TaskHandler(void)
 {
   char receivedUart = 0;
 
@@ -106,6 +108,15 @@ static void APP_TaskHandler(void)
 	Ecris_UART_string( "contenu: %s", ind.data );	
 	receivedWireless = 0; 
   }
+}*/
+
+static void APP_TaskHandler(void)
+{
+	Lis_UART();
+	
+	while (TIMER_COUNT > TCNT0);
+	
+	TCNT0 = 0;
 }
 
 
@@ -134,11 +145,12 @@ int main(void)
 *****************************************************************************/
 void SYS_Init(void)
 {
-receivedWireless = 0;
-wdt_disable(); 
-init_UART();
-PHY_Init(); //initialise le wireless
-PHY_SetRxState(1); //TRX_CMD_RX_ON
+	receivedWireless = 0;
+	wdt_disable(); 
+	init_UART();
+	init_Timer();
+	PHY_Init(); //initialise le wireless
+	PHY_SetRxState(1); //TRX_CMD_RX_ON
 }
 //
 
@@ -204,14 +216,8 @@ void Ecris_UART_string(char const * data, ...)
 
 void init_UART(void)
 {
-	//baud rate register = Fcpu / (16*baud rate - 1)
-	//baudrate = 9600bps //s'assurer que la fuse CLKDIV8 n'est pas activée dans les Fuses, sinon ca donne 1200bps
-	UBRR1H = 0x00;
-	UBRR1L = 53;
-	
-	UCSR1A = 0x00;
-	UCSR1B = 0x18; //receiver, transmitter enable, no parity
-	UCSR1C = 0x06; //8-bits per character, 1 stop bit
+	InitUart_0(BAUD_RATE);
+	InitUart_1(BAUD_RATE);
 }
 
 

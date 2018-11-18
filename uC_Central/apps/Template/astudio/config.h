@@ -49,6 +49,6 @@
 
 /*- Definitions ------------------------------------------------------------*/
 // Put your configuration option here
-#define CPU_CLK_HZ 16000000
+#define CPU_CLK_HZ 16000000L
 
 #endif // _CONFIG_H_
