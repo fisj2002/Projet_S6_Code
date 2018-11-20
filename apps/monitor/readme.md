@@ -2,6 +2,8 @@
 
 To install this dev project run the following commands in an elevated command prompt. Make sure your current directory is set to this present directory:
 
+Make sure Node is installed
+
 Intall node dependencies
 ```
 $ npm install
