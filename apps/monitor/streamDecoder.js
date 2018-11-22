@@ -54,6 +54,7 @@ class StreamDecoder extends Writable {
                     this._mefState = MEF_WAIT_RCOM;
                 break;
 
+            // Master steps
             case MEF_WAIT_MCOM:
                 // Checking for list command
                 if (nextChar == settings.prot.LIST_COMMAND)
@@ -79,7 +80,11 @@ class StreamDecoder extends Writable {
                     this._mefState = MEF_END_CHAR;
                 break;
 
-            
+            // Slave steps
+            case MEF_WAIT_RCOM:
+                
+                break;
+
             case MEF_END_CHAR:
                 if (nextChar == settings.prot.END_BYTE)
                 {

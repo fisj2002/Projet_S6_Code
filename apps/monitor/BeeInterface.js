@@ -24,6 +24,7 @@ class BeeInterface extends EventEmitter
         // The array containing the hives
         this._hives = [];
 
+        // Stream decoder interprets the incoming bytes
         this._streamDecoder = this._port.pipe(new StreamDecoder());
         this._streamDecoder.on('command', (message)=>{
             this._fulfillRequests(message);
@@ -37,7 +38,8 @@ class BeeInterface extends EventEmitter
      */
     _fulfillRequests(message)
     {
-        if (message.command == settings.prot.LIST_COMMAND)
+        if (message.command == settings.prot.LIST_COMMAND &&
+            message.sourceId == settings.prot.MASTER_ADDR)
         {
             // Make sure every element of the list is accounted for
             message.list.forEach((hiveId)=>{
@@ -54,12 +56,15 @@ class BeeInterface extends EventEmitter
                 }
             });
         }
+        else    // Slave response
+        {
+            
+        }
 
         // Call the callback of the first matching request
         var match = this._outboundRequests.find((request)=>
             request.sourceId == message.sourceId && request.command == message.command
         );
-
         if(match)
             match.resolve();
     }
@@ -71,21 +76,41 @@ class BeeInterface extends EventEmitter
     {
         try
         {
-            await this._updateList();
+            await this._uartRequest(settings.prot.MASTER_ADDR, settings.prot.LIST_COMMAND);
         }
         catch(err)
         {
             console.log('Master Connection timeout');
         }
+
+        var promiseList = [];
+        // Sensors request on every slave
+        this._hives.forEach((hive)=>{
+            promiseList.push(this._uartRequest(hive.id, settings.prot.SENSORS_COMMAND));
+        });
+
+        try
+        {
+            await Promise.all(promiseList);
+        }
+        catch(err)
+        {
+            console.log('Slave connection timeout');
+        }
     }
 
-    async _updateList()
+    /**
+     * Sends request and waits of the response to resolve
+     * @param {Number} destinationID The Id of the target
+     * @param {Number} commandCode Code of the command
+     */
+    async _uartRequest(destinationID, commandCode)
     {
         var listPromise = new Promise((resolve,reject)=>{
             // Add to pending requests
             this._outboundRequests.push({
-                sourceId: settings.prot.MASTER_ADDR,
-                command: settings.prot.LIST_COMMAND,
+                sourceId: destinationID,
+                command: commandCode,
                 resolve: resolve    // The call back for a successful functions
             });
 
@@ -98,8 +123,8 @@ class BeeInterface extends EventEmitter
         // Send the request to the master
         this._port.write(Buffer.from([
             settings.prot.START_BYTE,
-            settings.prot.MASTER_ADDR,
-            settings.prot.LIST_COMMAND,
+            destinationID,
+            commandCode,
             settings.prot.END_BYTE,
         ]));
 
@@ -115,8 +140,8 @@ class BeeInterface extends EventEmitter
 
         // Remove request from list
         var firstMatchIndex = this._outboundRequests.findIndex((request)=>{
-            return request.sourceId == settings.prot.MASTER_ADDR &&
-                request.command == settings.prot.LIST_COMMAND;
+            return request.sourceId == destinationID &&
+                request.command == commandCode;
         });
         this._outboundRequests.splice(firstMatchIndex, 1);
 

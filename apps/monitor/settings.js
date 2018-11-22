@@ -14,5 +14,10 @@ module.exports =
         END_BYTE: 'E'.charCodeAt(0),
 
         LIST_COMMAND: 'L'.charCodeAt(0),
+        SENSORS_COMMAND: 'F'.charCodeAt(0),
+        SENSORS_RESPONSE: 'R'.charCodeAt(0),
+        ACTUATOR_ON_COMMAND: 'A'.charCodeAt(0),
+        ACTUATOR_OFF_COMMAND: 'D'.charCodeAt(0),
+        ALERT_COMMAND: 'N'.charCodeAt(0),
     }
 }
