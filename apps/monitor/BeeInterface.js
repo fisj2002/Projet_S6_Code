@@ -1,5 +1,6 @@
 const SerialPort = require('serialport');
 const EventEmitter = require('events');
+const StreamDecoder = require('./streamDecoder');
 const settings = require('./settings');
 const fs = require('fs');
 
@@ -13,15 +14,24 @@ class BeeInterface extends EventEmitter
     {
         super();
 
-        this.port = new SerialPort(comName, 
+        this._port = new SerialPort(comName, 
             {baudRate: settings.DEFAULT_BAUD_RATE});
 
         // The array containing the current active requests
         this.outboundRequests = [];
 
-        this.port.on('data', data =>{
-            console.log(data);
-        });
+        this._streamDecoder = this._port.pipe(new StreamDecoder());
+        this._streamDecoder.on('command',this._fulfillRequests);
+    }
+
+    /**
+     * Analyze the incoming transmissions and tries to match them to
+     * the requests that were issued
+     * @param {Object} message The object describing the response
+     */
+    _fulfillRequests(message)
+    {
+        console.log(message);
     }
 
     /**
@@ -30,7 +40,12 @@ class BeeInterface extends EventEmitter
     async update()
     {
         // Send list request
-        this.port.write(Buffer.from([0x53, 0xFF, 0x4C, 0x45]));
+        this._port.write(Buffer.from([
+            settings.prot.START_BYTE,
+            settings.prot.MASTER_ADDR,
+            settings.prot.LIST_COMMAND,
+            settings.prot.END_BYTE,
+        ]));
     }
 
     /**
@@ -101,6 +116,11 @@ class BeeInterface extends EventEmitter
 
         return curatedList;
     }
+}
+
+class Hive
+{
+
 }
 
 module.exports = BeeInterface;
