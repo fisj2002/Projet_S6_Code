@@ -112,10 +112,31 @@ PHY_DataInd_t ind; //cet objet contiendra les informations concernant le dernier
 
 static void APP_TaskHandler(void)
 {
-	Lis_UART();
+	char receivedUART = 0;
 	
-	while (TIMER_COUNT > TCNT0);
+	ExtractRxUart(GetUART1(), &receivedUART, 1);
 	
+	if (receivedUART)
+	{
+		switch (receivedUART)
+		{
+			case 'A':
+			case 'a':
+			{
+				SendnUart(GetUART1(), &receivedUART, 1);
+				SendUart(GetUART1(), " est un A\n\r");
+				break;
+			}
+			default:
+			{
+				SendnUart(GetUART1(), &receivedUART, 1);
+				SendUart(GetUART1(), " n'est pas un A\n\r");
+				break;
+			}
+		}
+	}
+	
+	while (TIMER_COUNT > TCNT0){};
 	TCNT0 = 0;
 }
 

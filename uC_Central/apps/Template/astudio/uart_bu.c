@@ -31,8 +31,6 @@ void (*iVector1)(char) = 0;
 /************************************************************************/
 /* Private prototypes                                                   */
 /************************************************************************/
-bool StartTxUart0();
-bool StartTxUart1();
 
 
 /************************************************************************/
@@ -193,7 +191,7 @@ int SendnUart1(const char * message, int length)
 	Start sending bytes if the none were being sent.
 	Returns false if uart is already sending or the buffer is empty.
 */
-bool StartTxUart0()
+int StartTxUart0()
 {
 	if (isSending0)
 		return false;
@@ -212,7 +210,7 @@ bool StartTxUart0()
 	return true;
 }
 
-bool StartTxUart1()
+int StartTxUart1()
 {
 	if (isSending1)
 	return false;

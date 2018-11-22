@@ -9,8 +9,7 @@
 
 void init_Timer(void)
 {
-	 TCCR0A = 0x00;
-	 TCCR0B = TCCR0B && 0x05;
+	 TCCR0B |= (1 << CS02)|(1 << CS00);
 	 
 	 TCNT0 = 0;
 }

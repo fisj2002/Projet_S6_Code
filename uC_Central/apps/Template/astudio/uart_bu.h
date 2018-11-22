@@ -29,27 +29,38 @@ typedef struct{
 	void (*iVector)(char);				// Interrupt vectors to be called when packet is received
 } UART_System;
 
-UART_System* GetUART0(void);
-UART_System* GetUART1(void);
+UART_System Get_UART0(void);
+UART_System Get_UART1(void);
 
 void InitUart_0(uint16_t baudrate);
 void InitUart_1(uint16_t baudrate);
 
-bool StartTxUart0();
-bool StartTxUart1();
+void SetRxInterruptUart0(void(*iVector)(char));
 
-void SetRxInterruptUart(UART_System* UART, void(*iVector)(char));
+int SendUart0(const char * message);
 
-int SendUart(UART_System* UART, const char * message);
+int SendnUart0(const char * message, int length);
 
-int SendnUart(UART_System* UART, const char * message, int length);
+int StartTxUart0();
 
-int StartTxUart(UART_System* UART);
+int GetRxCountUart0();
 
-int GetRxCountUart(UART_System* UART);
+int ExtractRxUart0(char * destination, int length);
 
-int ExtractRxUart(UART_System* UART, char * destination, int length);
+int FlushRxUart0();
 
-int FlushRxUart(UART_System* UART);
+void SetRxInterruptUart1(void(*iVector)(char));
+
+int SendUart1(const char * message);
+
+int SendnUart1(const char * message, int length);
+
+int StartTxUart1();
+
+int GetRxCountUart1();
+
+int ExtractRxUart1(char * destination, int length);
+
+int FlushRxUart1();
 
 #endif /* UART_H_ */

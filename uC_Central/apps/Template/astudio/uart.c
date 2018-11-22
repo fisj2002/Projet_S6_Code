@@ -7,20 +7,26 @@
 
 #include "uart.h"
 
-UART_System UART0;
-UART_System UART1;
-
 /************************************************************************/
 /* Private prototypes                                                   */
 /************************************************************************/
-bool StartTxUart0();
-bool StartTxUart1();
 
+UART_System UART0;
+UART_System UART1;
 
 /************************************************************************/
 /* Function declarations                                                */
 /************************************************************************/
 
+UART_System* GetUART0(void)
+{
+	return &UART0;
+}
+
+UART_System* GetUART1(void)
+{
+	return &UART1;
+}
 
 void InitUart_0 (uint16_t baudrate)
 {
@@ -106,9 +112,9 @@ void InitUart_1 (uint16_t baudrate)
 	To disable the interrupt pass a 0 pointer
 */
 
-void SetRxInterruptUart (UART_System UART, void(*iVector)(char))
+void SetRxInterruptUart (UART_System* UART, void(*iVector)(char))
 {
-	UART.iVector = iVector;
+	UART->iVector = iVector;
 }
 
 /** 
@@ -116,11 +122,11 @@ void SetRxInterruptUart (UART_System UART, void(*iVector)(char))
 	Returns the number of characters that were sent
 */
 
-int SendUart(UART_System UART, const char * message)
+int SendUart(UART_System* UART, const char * message)
 {
 	int bytesQueued = 0;
 	
-	while(AppendFIFO(&UART.txBuffer, *message))
+	while(AppendFIFO(&(UART->txBuffer), *message))
 	{
 		++ bytesQueued;
 		
@@ -140,11 +146,11 @@ int SendUart(UART_System UART, const char * message)
 	Returns the numbers of characters queued
 */
 
-int SendnUart(UART_System UART, const char * message, int length)
+int SendnUart(UART_System* UART, const char * message, int length)
 {
 	int bytesQueued = 0;
 	
-	while(bytesQueued < length && AppendFIFO(&UART.txBuffer, *message++))
+	while(bytesQueued < length && AppendFIFO(&(UART->txBuffer), *message++))
 		++ bytesQueued;
 	
 	StartTxUart(UART);
@@ -157,14 +163,14 @@ int SendnUart(UART_System UART, const char * message, int length)
 	Returns false if uart is already sending, the buffer is empty or an invalid UART parameter is sent.
 */
 
-int StartTxUart(UART_System UART)
+int StartTxUart(UART_System* UART)
 {
-	switch (UART.ID)
+	switch (UART->ID)
 	{
 		case 0:
-			return StartTxUart0();
+			return StartTxUart0(UART);
 		case 1:
-			return StartTxUart1();
+			return StartTxUart1(UART);
 		default:
 			return false;
 	}
@@ -177,7 +183,7 @@ bool StartTxUart0()
 		
 	char charToSend;
 		
-	if (!ReadFIFO(&UART0.txBuffer, &charToSend))
+	if (!ReadFIFO(&(UART0.txBuffer), &charToSend))
 		return false;
 		
 	UART0.isSending = true;	
@@ -196,7 +202,7 @@ bool StartTxUart1()
 	
 	char charToSend;
 	
-	if (!ReadFIFO(&UART1.txBuffer, &charToSend))
+	if (!ReadFIFO(&(UART1.txBuffer), &charToSend))
 	return false;
 	
 	UART1.isSending = true;
@@ -211,9 +217,9 @@ bool StartTxUart1()
 /** 
 	Retrieve the number of bytes in the reception buffer
 */
-int GetRxCountUart(UART_System UART)
+int GetRxCountUart(UART_System* UART)
 {
-	return UART.rxBuffer.byteCount;
+	return UART->rxBuffer.byteCount;
 }
 
 /** 
@@ -222,11 +228,11 @@ int GetRxCountUart(UART_System UART)
 	Returns the number of bytes copied
 */
 
-int ExtractRxUart(UART_System UART, char * destination, int length)
+int ExtractRxUart(UART_System* UART, char * destination, int length)
 {
 	int byteCount = 0;
 	
-	while(byteCount++ < length && ReadFIFO(&UART.rxBuffer, destination++));
+	while(byteCount++ < length && ReadFIFO(&(UART->rxBuffer), destination++));
 	
 	return byteCount;
 }
@@ -236,11 +242,11 @@ int ExtractRxUart(UART_System UART, char * destination, int length)
 	Returns the number of characters removed
 */
 
-int FlushRxUart(UART_System UART)
+int FlushRxUart(UART_System* UART)
 {
-	int flushed = UART.rxBuffer.byteCount;
+	int flushed = UART->rxBuffer.byteCount;
 	
-	ClearFIFO(&UART.rxBuffer);
+	ClearFIFO(&(UART->rxBuffer));
 	
 	return flushed;
 }
@@ -250,7 +256,7 @@ ISR(USART0_RX_vect)
 {
 	char in = UDR0;
 	
-	AppendFIFO(&UART0.rxBuffer, in);
+	AppendFIFO(&(UART0.rxBuffer), in);
 	
 	// Call user-defined interrupt vector if any
 	if (UART0.iVector)
@@ -261,7 +267,7 @@ ISR(USART1_RX_vect)
 {
 	char in = UDR1;
 	
-	AppendFIFO(&UART1.rxBuffer, in);
+	AppendFIFO(&(UART1.rxBuffer), in);
 	
 	if (UART1.iVector)
 		(*UART1.iVector)(in);
@@ -272,7 +278,7 @@ ISR(USART0_UDRE_vect)
 {
 	char nextChar;
 	
-	if(ReadFIFO(&UART0.txBuffer, &nextChar))
+	if(ReadFIFO(&(UART0.txBuffer), &nextChar))
 		UDR0 = nextChar;
 	else
 	{
@@ -285,7 +291,7 @@ ISR(USART1_UDRE_vect)
 {
 	char nextChar;
 	
-	if(ReadFIFO(&UART1.txBuffer, &nextChar))
+	if(ReadFIFO(&(UART1.txBuffer), &nextChar))
 		UDR1 = nextChar;
 	else
 	{
