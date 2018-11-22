@@ -6,6 +6,7 @@ const MEF_DEFAULT = 0;
 const MEF_WAIT_ADDR = 1;
 const MEF_WAIT_MCOM = 2;
 const MEF_WAIT_RCOM = 3;
+
 const MEF_LIST_LENGTH = 4;
 const MEF_LISTING = 5;
 const MEF_END_CHAR = 6;

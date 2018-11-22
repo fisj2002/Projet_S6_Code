@@ -11,7 +11,11 @@ BeeInterface.listInterfaces().then(list =>{
     interface =  new BeeInterface(list[0].comName);
 
 }).then(()=> {
-    setInterval(()=>{interface.update();}, settings.SLAVE_REQUEST_TIMEOUT_MS);
+    setInterval(()=>{
+        interface.update().then(()=>{
+            console.log(interface.getSlaves());
+        });
+    }, settings.SLAVE_REQUEST_INTERVAL_MS);
 });
 
 

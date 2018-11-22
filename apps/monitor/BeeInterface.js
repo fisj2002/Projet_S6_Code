@@ -1,6 +1,7 @@
 const SerialPort = require('serialport');
 const EventEmitter = require('events');
 const StreamDecoder = require('./streamDecoder');
+const Hive = require('./hive');
 const settings = require('./settings');
 const fs = require('fs');
 
@@ -18,10 +19,15 @@ class BeeInterface extends EventEmitter
             {baudRate: settings.DEFAULT_BAUD_RATE});
 
         // The array containing the current active requests
-        this.outboundRequests = [];
+        this._outboundRequests = [];
+
+        // The array containing the hives
+        this._hives = [];
 
         this._streamDecoder = this._port.pipe(new StreamDecoder());
-        this._streamDecoder.on('command',this._fulfillRequests);
+        this._streamDecoder.on('command', (message)=>{
+            this._fulfillRequests(message);
+        });
     }
 
     /**
@@ -31,7 +37,31 @@ class BeeInterface extends EventEmitter
      */
     _fulfillRequests(message)
     {
-        console.log(message);
+        if (message.command == settings.prot.LIST_COMMAND)
+        {
+            // Make sure every element of the list is accounted for
+            message.list.forEach((hiveId)=>{
+                if (!(this._hives[hiveId]))
+                    this._hives[hiveId] = new Hive(hiveId);
+            });
+
+            // Notify all the disconnected hives
+            this._hives.forEach((hive, index)=>{
+                if (hive)
+                {
+                    if (!message.list.find((element)=> element == index))
+                        hive.addConnectionLost();
+                }
+            });
+        }
+
+        // Call the callback of the first matching request
+        var match = this._outboundRequests.find((request)=>
+            request.sourceId == message.sourceId && request.command == message.command
+        );
+
+        if(match)
+            match.resolve();
     }
 
     /**
@@ -39,13 +69,59 @@ class BeeInterface extends EventEmitter
      */
     async update()
     {
-        // Send list request
+        try
+        {
+            await this._updateList();
+        }
+        catch(err)
+        {
+            console.log('Master Connection timeout');
+        }
+    }
+
+    async _updateList()
+    {
+        var listPromise = new Promise((resolve,reject)=>{
+            // Add to pending requests
+            this._outboundRequests.push({
+                sourceId: settings.prot.MASTER_ADDR,
+                command: settings.prot.LIST_COMMAND,
+                resolve: resolve    // The call back for a successful functions
+            });
+
+            // Setting timeout
+            setTimeout(()=>{
+                reject('Slave time out')
+            }, settings.SLAVE_REQUEST_TIMEOUT_MS);
+        });
+
+        // Send the request to the master
         this._port.write(Buffer.from([
             settings.prot.START_BYTE,
             settings.prot.MASTER_ADDR,
             settings.prot.LIST_COMMAND,
             settings.prot.END_BYTE,
         ]));
+
+        var err = null;
+        try
+        {
+            await listPromise;
+        }
+        catch(error)
+        {
+            err = error;
+        }
+
+        // Remove request from list
+        var firstMatchIndex = this._outboundRequests.findIndex((request)=>{
+            return request.sourceId == settings.prot.MASTER_ADDR &&
+                request.command == settings.prot.LIST_COMMAND;
+        });
+        this._outboundRequests.splice(firstMatchIndex, 1);
+
+        if(err)
+            throw err;
     }
 
     /**
@@ -53,7 +129,7 @@ class BeeInterface extends EventEmitter
      */
     getSlaves()
     {
-
+        return this._hives;
     }
 
     /**
@@ -70,7 +146,7 @@ class BeeInterface extends EventEmitter
      * Enables the actuator of the specified slave
      * @param {Number} Id The number of the desired slave
      */
-    enableActuator(Id)
+    async enableActuator(Id)
     {
 
     }
@@ -79,7 +155,7 @@ class BeeInterface extends EventEmitter
      * Disables the actuator of the specified slave
      * @param {Number} Id The number of the desired slave
      */
-    disableActuator(Id)
+    async disableActuator(Id)
     {
 
     }
@@ -116,11 +192,6 @@ class BeeInterface extends EventEmitter
 
         return curatedList;
     }
-}
-
-class Hive
-{
-
 }
 
 module.exports = BeeInterface;
