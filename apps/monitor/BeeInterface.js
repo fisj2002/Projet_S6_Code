@@ -1,16 +1,27 @@
 const SerialPort = require('serialport');
 const EventEmitter = require('events');
+const settings = require('./settings');
+const fs = require('fs');
 
 class BeeInterface extends EventEmitter
 {
-
     /**
      * Ouvre une interface vers un appareil beewatch
      * @param {String} comName The name of the interface to open (ex: COM3, /tty3)
      */
     constructor(comName)
     {
+        super();
 
+        this.port = new SerialPort(comName, 
+            {baudRate: settings.DEFAULT_BAUD_RATE});
+
+        // The array containing the current active requests
+        this.outboundRequests = [];
+
+        this.port.on('data', data =>{
+            console.log(data);
+        });
     }
 
     /**
@@ -18,7 +29,8 @@ class BeeInterface extends EventEmitter
      */
     async update()
     {
-
+        // Send list request
+        this.port.write(Buffer.from([0x53, 0xFF, 0x4C, 0x45]));
     }
 
     /**
@@ -63,7 +75,31 @@ class BeeInterface extends EventEmitter
      */
     static async listInterfaces()
     {
+        var p_knownDevices = new Promise((resolve, reject)=>{
+            fs.readFile(settings.DEVICE_FILE_PATH, (err, devices)=>{
+                if(err)
+                    reject(err);
+                else 
+                    resolve(JSON.parse(devices));
+            });
+        });
 
+        var p_portList = SerialPort.list();
+
+        var [portList, knownDevices] = await Promise.all([p_portList, p_knownDevices]);
+
+        var curatedList = [];
+
+        portList.forEach(port => {
+            var referenceDevice = knownDevices.find(
+                device => device.vendorId == port.vendorId 
+                && device.productId == port.productId);
+
+            if(referenceDevice)
+                curatedList.push({name: referenceDevice.displayName, comName: port.comName});
+        });
+
+        return curatedList;
     }
 }
 

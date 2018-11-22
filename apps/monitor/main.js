@@ -1,22 +1,19 @@
-const SerialPort = require('serialport');
 const electron = require('electron');
-const fs = require('fs');
+const settings = require('./settings');
+const BeeInterface = require('./BeeInterface');
 
-SerialPort.list().then(list =>{
+var interface;
+
+BeeInterface.listInterfaces().then(list =>{
     console.log(list);
 
-    fs.writeFileSync('data2.json',JSON.stringify(list, null, 4));
+    console.log('Choosing the first interface');
+    interface =  new BeeInterface(list[0].comName);
 
-    electron.app.quit();
-})
+}).then(()=> {
+    interface.update();
+    setInterval(()=>{interface.update();}, settings.SLAVE_REQUEST_TIMEOUT_MS);
+});
 
 
-
-// // Assuming windows platform
-// serialport = new SerialPort('COM3',{baudRate : 9600});
-// parser = new SerialPort.parsers.Readline();
-
-// serialport.pipe(parser);
-// parser.on('data', console.log);
-
-// serialport.write('Hello World\r\n');
+//              electron.app.quit();
