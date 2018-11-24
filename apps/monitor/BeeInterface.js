@@ -58,7 +58,13 @@ class BeeInterface extends EventEmitter
         }
         else    // Slave response
         {
-            
+            if(message.command == settings.prot.SENSORS_RESPONSE)
+                message.command = settings.prot.SENSORS_COMMAND;
+
+            if (! this._hives[message.sourceId])
+                this._hives[message.sourceId] = new Hive(message.sourceId);
+
+            this._hives[message.sourceId].addEvent(message);
         }
 
         // Call the callback of the first matching request
@@ -67,6 +73,10 @@ class BeeInterface extends EventEmitter
         );
         if(match)
             match.resolve();
+
+        // Raise an event if the message is an alert
+        if (message.command == settings.prot.ALERT_COMMAND)
+            this.emit('alert', message.sourceId);
     }
 
     /**
@@ -89,14 +99,7 @@ class BeeInterface extends EventEmitter
             promiseList.push(this._uartRequest(hive.id, settings.prot.SENSORS_COMMAND));
         });
 
-        try
-        {
-            await Promise.all(promiseList);
-        }
-        catch(err)
-        {
-            console.log('Slave connection timeout');
-        }
+        await Promise.all(promiseList);
     }
 
     /**
@@ -106,7 +109,7 @@ class BeeInterface extends EventEmitter
      */
     async _uartRequest(destinationID, commandCode)
     {
-        var listPromise = new Promise((resolve,reject)=>{
+        var responsePromise = new Promise((resolve,reject)=>{
             // Add to pending requests
             this._outboundRequests.push({
                 sourceId: destinationID,
@@ -131,10 +134,17 @@ class BeeInterface extends EventEmitter
         var err = null;
         try
         {
-            await listPromise;
+            await responsePromise;
         }
         catch(error)
         {
+            // Add disconnection event to slave
+            if (destinationID != settings.prot.MASTER_ADDR)
+            {
+                if (this._hives[destinationID] && this._hives[destinationID].connection)
+                    this._hives[destinationID].addConnectionLost();
+            }
+
             err = error;
         }
 
@@ -154,7 +164,13 @@ class BeeInterface extends EventEmitter
      */
     getSlaves()
     {
-        return this._hives;
+        var slaves = [];
+
+        this._hives.forEach((hive)=>{
+            slaves.push(hive.getResume());
+        });
+
+        return slaves;
     }
 
     /**
@@ -164,7 +180,7 @@ class BeeInterface extends EventEmitter
      */
     getHistoric(Id)
     {
-
+        return this._hives[Id].log;
     }
 
     /**
@@ -173,7 +189,7 @@ class BeeInterface extends EventEmitter
      */
     async enableActuator(Id)
     {
-
+        await this._uartRequest(settings.prot.MASTER_ADDR, settings.prot.LIST_COMMAND);
     }
 
     /**
@@ -182,7 +198,7 @@ class BeeInterface extends EventEmitter
      */
     async disableActuator(Id)
     {
-
+        await this._uartRequest(settings.prot.MASTER_ADDR, settings.prot.LIST_COMMAND);
     }
 
     /**

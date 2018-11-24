@@ -1,3 +1,6 @@
+const settings = require('./settings');
+
+
 class Hive
 {
     /**
@@ -8,8 +11,9 @@ class Hive
     {
         this.id = id;
         this.connection = true;
+        this.actuatorEnabled = false;
         this.log = [
-            {event: 'creation', time: Date.now()}
+            {event: 'Hive discovery', time: Date.now()}
         ];
     }
 
@@ -19,7 +23,38 @@ class Hive
      */
     addEvent(message)
     {
+        var eventType = '';
 
+        switch (message.command)
+        {
+            case settings.prot.SENSORS_COMMAND:
+                eventType = 'Sensors reading';
+                break;
+            case settings.prot.ACTUATOR_OFF_COMMAND:
+                eventType = 'Actuator disbled';
+                actuatorEnabled = false;
+                break;
+            case settings.prot.ACTUATOR_ON_COMMAND:
+                eventType = 'Actuator enabled';
+                actuatorEnabled = true;
+                break;
+            case settings.prot.ALERT_COMMAND:
+                eventType = 'Alert raised';
+                break;
+            default:
+                throw `Invalid operation: ${message.command}`;
+        }
+
+        this.connection = true;
+
+        this.log.push({
+            event: eventType,
+            time: Date.now(),
+            temperature: message.temperature,
+            movement: message.movement,
+            longitude: message.longitude,
+            latitude: message.latitude
+        });
     }
 
     /**
@@ -40,7 +75,30 @@ class Hive
      */
     getResume()
     {
+        var lastDataLog = {};
 
+        for(var i = this.log.length-1; i >= 0; --i)
+        {
+            // Find the first entry with usable data
+            if (this.log[i].temperature != undefined)
+            {
+                lastDataLog = this.log[i];
+                break;
+            }
+        }
+
+        return {
+            id: this.id,
+            connectionActive: this.connection,
+            actuatorEnabled: this.actuatorEnabled,
+            
+            temperature: lastDataLog.temperature,
+            longitude: lastDataLog.longitude,
+            latitude: lastDataLog.latitude,
+            movement: lastDataLog.movement,
+
+            lastSampleTime: lastDataLog.time,
+        };
     }
 }
 

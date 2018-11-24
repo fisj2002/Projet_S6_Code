@@ -11,6 +11,8 @@ const MEF_LIST_LENGTH = 4;
 const MEF_LISTING = 5;
 const MEF_END_CHAR = 6;
 
+const MEF_SLAVE_DATA = 7;
+
 class StreamDecoder extends Writable {
     constructor(options) 
     {
@@ -20,6 +22,8 @@ class StreamDecoder extends Writable {
 
         this._currentMessage = {};
         this._expectedChars = 0;
+        this._byteBuffer = new ArrayBuffer(10); // Stores the incoming bytes to be decoded
+        this._bufferView = new DataView(this._byteBuffer);
     }
 
     _write(chunk, encoding, callback)
@@ -82,9 +86,45 @@ class StreamDecoder extends Writable {
 
             // Slave steps
             case MEF_WAIT_RCOM:
-                
+                // Check if the incoming command is valid
+                switch (nextChar)
+                {
+                    case settings.prot.SENSORS_COMMAND:
+                    case settings.prot.ACTUATOR_OFF_COMMAND:
+                    case settings.prot.ACTUATOR_ON_COMMAND:
+                    case settings.prot.ALERT_COMMAND:
+                    case settings.prot.SENSORS_RESPONSE:
+                        this._currentMessage.command = nextChar;
+                        this._expectedChars = 10;
+                        this._mefState = MEF_SLAVE_DATA;
+                        break;
+                    default:    // Invaling command
+                        this._mefState = MEF_DEFAULT;
+                        break;
+                }
                 break;
 
+            case MEF_SLAVE_DATA:
+                this._bufferView.setUint8(
+                    this._byteBuffer.byteLength - this._expectedChars,
+                    nextChar);
+                --this._expectedChars;
+                if(this._expectedChars <= 0)
+                {
+                    // Decoding data
+                    this._currentMessage.temperature = this._bufferView.getInt8(0);
+                    this._currentMessage.movement = this._bufferView.getUint8(1) != 0;
+                    
+                    // Small endian decoding coming from micro-controller
+                    this._currentMessage.longitude = this._bufferView.getFloat32(2, true);
+                    this._currentMessage.latitude = this._bufferView.getFloat32(6, true);
+
+                    // Waiting last char
+                    this._mefState = MEF_END_CHAR;
+                }
+                break;
+
+            // Waiting for the closing char
             case MEF_END_CHAR:
                 if (nextChar == settings.prot.END_BYTE)
                 {
