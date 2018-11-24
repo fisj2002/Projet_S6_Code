@@ -1,6 +1,5 @@
 const electron = require('electron');
-const settings = require('./settings');
-const BeeInterface = require('./BeeInterface');
+const BeeInterface = require('./bee/BeeInterface');
 
 var interface;
 
