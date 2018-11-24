@@ -13,12 +13,22 @@ BeeInterface.listInterfaces().then(list =>{
     else
         throw 'No interface found';
 
-}).then(()=> {
-    setInterval(()=>{
+    interface.on('alert', (slaveId)=>{
+        console.log('Alerte sur la ruche %d', slaveId);
+    });
+
+    setTimeout(()=>{
+        console.log('Sending request')
         interface.update().then(()=>{
-            console.log(interface.getSlaves());
+            var slaves = interface.getSlaves();
+            interface.enableActuator(slaves[0].id);
+
+            setTimeout(()=>{interface.enableActuator(slaves[1].id);}, 1000);
+            setTimeout(()=>{interface.disableActuator(slaves[1].id);}, 2000);
+
+            setTimeout(()=>{interface.disableActuator(slaves[0].id);}, 15000);
         });
-    }, settings.SLAVE_REQUEST_INTERVAL_MS);
+    }, 2000);
 });
 
 

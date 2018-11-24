@@ -84,14 +84,7 @@ class BeeInterface extends EventEmitter
      */
     async update()
     {
-        try
-        {
-            await this._uartRequest(settings.prot.MASTER_ADDR, settings.prot.LIST_COMMAND);
-        }
-        catch(err)
-        {
-            console.log('Master Connection timeout');
-        }
+        await this._uartRequest(settings.prot.MASTER_ADDR, settings.prot.LIST_COMMAND);
 
         var promiseList = [];
         // Sensors request on every slave
@@ -119,8 +112,8 @@ class BeeInterface extends EventEmitter
 
             // Setting timeout
             setTimeout(()=>{
-                reject('Slave time out')
-            }, settings.SLAVE_REQUEST_TIMEOUT_MS);
+                reject('Request timeout')
+            }, settings.REQUEST_TIMEOUT_MS);
         });
 
         // Send the request to the master
@@ -189,7 +182,7 @@ class BeeInterface extends EventEmitter
      */
     async enableActuator(Id)
     {
-        await this._uartRequest(settings.prot.MASTER_ADDR, settings.prot.LIST_COMMAND);
+        await this._uartRequest(Id, settings.prot.ACTUATOR_ON_COMMAND);
     }
 
     /**
@@ -198,7 +191,7 @@ class BeeInterface extends EventEmitter
      */
     async disableActuator(Id)
     {
-        await this._uartRequest(settings.prot.MASTER_ADDR, settings.prot.LIST_COMMAND);
+        await this._uartRequest(Id, settings.prot.ACTUATOR_OFF_COMMAND);
     }
 
     /**

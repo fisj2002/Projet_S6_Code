@@ -32,11 +32,11 @@ class Hive
                 break;
             case settings.prot.ACTUATOR_OFF_COMMAND:
                 eventType = 'Actuator disbled';
-                actuatorEnabled = false;
+                this.actuatorEnabled = false;
                 break;
             case settings.prot.ACTUATOR_ON_COMMAND:
                 eventType = 'Actuator enabled';
-                actuatorEnabled = true;
+                this.actuatorEnabled = true;
                 break;
             case settings.prot.ALERT_COMMAND:
                 eventType = 'Alert raised';

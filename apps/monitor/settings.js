@@ -4,7 +4,7 @@ module.exports =
     DEVICE_FILE_PATH: './knownDevices.json',
 
     SLAVE_REQUEST_INTERVAL_MS: 2000,
-    SLAVE_REQUEST_TIMEOUT_MS: 1000,
+    REQUEST_TIMEOUT_MS: 1000,
 
     // Protocol settings
     prot:{
