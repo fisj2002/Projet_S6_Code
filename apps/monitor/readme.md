@@ -21,3 +21,8 @@ Run the project :)
 ```
 npm start
 ```
+
+To repackage everything behind a standalone executable run the following command
+```
+npm run package-win
+```
