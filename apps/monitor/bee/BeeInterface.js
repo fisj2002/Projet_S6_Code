@@ -84,12 +84,15 @@ class BeeInterface extends EventEmitter
      */
     async update()
     {
+        // update slave list
         await this._uartRequest(settings.prot.MASTER_ADDR, settings.prot.LIST_COMMAND);
 
         var promiseList = [];
         // Sensors request on every slave
         this._hives.forEach((hive)=>{
-            promiseList.push(this._uartRequest(hive.id, settings.prot.SENSORS_COMMAND));
+            promiseList.push(new Promise((resolve,reject)=>{
+                this._uartRequest(hive.id, settings.prot.SENSORS_COMMAND).then(resolve).catch(resolve);
+            }));
         });
 
         await Promise.all(promiseList);

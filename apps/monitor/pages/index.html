@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <title>BeeWatch</title>
+    <!--Import Google Icon Font-->
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <!--Import materialize.css-->
+    <link type="text/css" rel="stylesheet" href="../node_modules/materialize-css/dist/css/materialize.css" media="screen,projection" />
+</head>
+
+<body>
+    <header>
+        <ul id="tabs-swipe-demo" class="tabs black">
+            <li class="tab col s6">
+                <a class="active" href="#test-swipe-1">
+                    <span>Mosaique</span>
+                    <i class="material-icons">view_module</i>
+                </a>
+            </li>
+            <li class="tab col s6">
+                <a href="#test-swipe-2">
+                    <span><i class="material-icons">map</i></span> Carte
+                </a>
+            </li>
+        </ul>
+    </header>
+    <main>
+        <div id="test-swipe-1" class="s12 blue">Mosaique</div>
+        <div id="test-swipe-2" class="s12 red">Carte</div>
+    </main>
+
+    <!--JavaScript at end of body for optimized loading-->
+    <script type="text/javascript" src="../node_modules/materialize-css/dist/js/materialize.js"></script>
+    <!--Materialize element Intializer-->
+    <script type="text/javascript">
+        M.AutoInit();
+        var instance = M.Tabs.init(el, {
+            
+        });
+    </script>
+</body>
+
+</html>
