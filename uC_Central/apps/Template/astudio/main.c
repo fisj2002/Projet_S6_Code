@@ -160,7 +160,26 @@ static void APP_TaskHandler(void)
 				}
 				break;
 			}
-			
+			case 'l':
+			case 'L':
+			{
+				char check;
+				ExtractRxUart(GetUART1(), &check, 1);
+				if (check == 'E')
+				{
+					char mess[32] = { 'S', 0xFF, slaveCount };
+					for (int i = 0; i < slaveCount ; i++)
+					{
+						int length = strlen(mess);
+						mess[length] = slaves[i].ID;
+					}
+					int length = strlen(mess);
+					mess[length] = 'E';
+					
+					SendUart(GetUART1(), mess);
+				}
+				break;
+			}
 			case 'X':
 			case 'x':
 			{
