@@ -151,7 +151,7 @@ static void APP_TaskHandler(void)
 				ExtractRxUart(GetUART1(), &check, 1);
 				if (check == 'E')
 				{
-					char mess[32] = { 'S', 0xFF, slaveCount };
+					char mess[32] = { 'S', 0xFF, 'L', slaveCount };
 					for (int i = 0; i < slaveCount ; i++)
 					{
 						int length = strlen(mess);
