@@ -49,7 +49,6 @@
 #include "phy.h"
 #include "uart.h"
 #include "timer.h"
-#include <stdio.h>
 #include <stdarg.h>
 
 /*- Definitions ------------------------------------------------------------*/
@@ -57,6 +56,18 @@
 
 /*- Types ------------------------------------------------------------------*/
 // Put your type definitions here
+typedef struct{
+	char temp;
+	char mouv;
+	float lon;
+	float lat;
+} data;
+
+typedef struct{
+	char ID;
+	data data;
+	char command[64];
+} slave;
 
 /*- Prototypes -------------------------------------------------------------*/
 // Put your function prototypes here
@@ -73,41 +84,39 @@ uint8_t receivedWireless;	//cette variable deviendra 1 lorsqu'un nouveau paquet 
 
 PHY_DataInd_t ind; //cet objet contiendra les informations concernant le dernier paquet qui vient de rentrer
 
-
+int slaveCount = 0;
+int slavePos = 0;
+slave slaves[8];
 /*- Implementations --------------------------------------------------------*/
 
 // Put your function implementations here
 
 /*************************************************************************//**
-*****************************************************************************/
+*****************************************************************************/ 
 /*static void APP_TaskHandler(void)
 {
-  char receivedUart = 0;
+	char receivedUart = 0;
 
-  receivedUart = Lis_UART();  
-  if(receivedUart)		//est-ce qu'un caractere a été recu par l'UART?
-  {
-	  Ecris_UART(receivedUart);	//envoie l'echo du caractere recu par l'UART
+	receivedUart = Lis_UART();
+	if(receivedUart)		//est-ce qu'un caractere a été recu par l'UART?
+	{
+		Ecris_UART(receivedUart);	//envoie l'echo du caractere recu par l'UART
 
-	  if(receivedUart == 'a')	//est-ce que le caractere recu est 'a'? 
+		if(receivedUart == 'a')	//est-ce que le caractere recu est 'a'?
 		{
-		uint8_t demonstration_string[128] = "123456789A"; //data packet bidon
-		Ecris_Wireless(demonstration_string, 10); //envoie le data packet; nombre d'éléments utiles du paquet à envoyer
+			uint8_t demonstration_string[128] = "123456789A"; //data packet bidon
+			Ecris_Wireless(demonstration_string, 10); //envoie le data packet; nombre d'éléments utiles du paquet à envoyer
 		}
-  }
+	}
 
+	if(receivedWireless == 1) //est-ce qu'un paquet a été recu sur le wireless?
+	{
+		char buf[196];
 
-
-
-  
-  if(receivedWireless == 1) //est-ce qu'un paquet a été recu sur le wireless? 
-  {
-	char buf[196];
-
-	Ecris_UART_string( "\n\rnew trame! size: %d, RSSI: %ddBm\n\r", ind.size, ind.rssi );
-	Ecris_UART_string( "contenu: %s", ind.data );	
-	receivedWireless = 0; 
-  }
+		Ecris_UART_string( "\n\rnew trame! size: %d, RSSI: %ddBm\n\r", ind.size, ind.rssi );
+		Ecris_UART_string( "contenu: %s", ind.data );
+		receivedWireless = 0;
+	}
 }*/
 
 static void APP_TaskHandler(void)
@@ -116,24 +125,121 @@ static void APP_TaskHandler(void)
 	
 	ExtractRxUart(GetUART1(), &receivedUART, 1);
 	
-	if (receivedUART)
+	if (receivedUART == 'S')
 	{
-		switch (receivedUART)
+		char receivedCommand[2];
+		
+		ExtractRxUart(GetUART1(), receivedCommand, 2);
+		
+		switch (receivedCommand[1])
 		{
 			case 'A':
 			case 'a':
 			{
-				SendnUart(GetUART1(), &receivedUART, 1);
-				SendUart(GetUART1(), " est un A\n\r");
+				char check;
+				ExtractRxUart(GetUART1(), &check, 1);
+				if (check == 'E')
+				{
+					SendnUart(GetUART1(), &receivedUART, 1);
+					SendUart(GetUART1(), " - Activation de l'actionneur\n\r");
+					sprintf(slaves[receivedCommand[0]-1].command, "S%c%cE", receivedCommand[0], receivedCommand[1]);
+				}
 				break;
 			}
+			
+			case 'D':
+			case 'd':
+			{
+				char check;
+				ExtractRxUart(GetUART1(), &check, 1);
+				if (check == 'E')
+				{
+					SendnUart(GetUART1(), &receivedUART, 1);
+					SendUart(GetUART1(), " - Désactivation de l'actionneur\n\r");
+					sprintf(slaves[receivedCommand[0]-1].command, "S%c%cE", receivedCommand[0], receivedCommand[1]);
+				}
+				break;
+			}
+			
+			case 'X':
+			case 'x':
+			{
+				char check;
+				ExtractRxUart(GetUART1(), &check, 1);
+				if (check == 'E')
+				{
+					SendnUart(GetUART1(), &receivedUART, 1);
+					SendUart(GetUART1(), " - Ajout d'une ruche\n\r");
+					sprintf(slaves[receivedCommand[0]-1].command, "S%c%cE", receivedCommand[0], receivedCommand[1]);
+				}
+				break;
+			}
+
 			default:
 			{
 				SendnUart(GetUART1(), &receivedUART, 1);
-				SendUart(GetUART1(), " n'est pas un A\n\r");
+				SendUart(GetUART1(), " n'est pas une commande reconnue\n\r");
 				break;
 			}
 		}
+	}
+	
+	int timeBeforeTimeout = 0;
+	while(timeBeforeTimeout < 16000)
+	{	
+		PHY_TaskHandler();
+		if(receivedWireless == 1)
+		{
+			if(ind.data[0] == 'S' && ind.data[1] == slaves[slavePos].ID && ind.data[13] == 'E')
+			{
+				SendnUart(GetUART1(), ind.data, 14);
+				SendnUart(GetUART1(), "\r\n", 2);
+				SendUart(GetUART1(), "ID: ");
+				char IDstr[1];
+				sprintf(IDstr, "%c", ind.data[1] + '0');
+				SendnUart(GetUART1(), IDstr, 1);
+				SendnUart(GetUART1(), "\r\n", 2);
+				SendUart(GetUART1(), "Temp: ");
+				char tempstr[4];
+				sprintf(tempstr, "%d", (int8_t) ind.data[3]);
+				SendUart(GetUART1(), tempstr);
+				SendnUart(GetUART1(), "\r\n", 2);
+				/*SendUart(GetUART1(), "\n\rLongitude de la ruche: ");
+				SendnUart(GetUART1(), ind.data[2], 3);
+				SendUart(GetUART1(), "\n\rLatitude de la ruche: ");
+				SendnUart(GetUART1(), ind.data[2], 3);*/
+				
+				break;
+			}
+			receivedWireless = 0;
+		}
+		timeBeforeTimeout++;
+	}
+	
+	if(timeBeforeTimeout >= 16000)
+	{
+		char err[32];
+		sprintf(err, "Err slave %c\n\r", slavePos + '1');
+		//SendUart(GetUART1(), err);
+	}
+	else
+	{
+		slaves[slavePos].command[0] = 0;
+	}
+	
+	slavePos++;
+	
+	if (slavePos >= slaveCount) slavePos = 0;
+	
+	if(slaves[slavePos].command[0] != 0)
+	{
+		Ecris_Wireless((uint8_t*)slaves[slavePos].command, sizeof(slaves[slavePos].command)/sizeof(slaves[slavePos].command[0]));
+	}
+	else
+	{
+		char defaultCMD[4];
+		sprintf(defaultCMD, "S%cFE", slaves[slavePos].ID);
+		Ecris_Wireless((uint8_t*)defaultCMD, 4);
 	}
 	
 	while (TIMER_COUNT > TCNT0){};
@@ -147,6 +253,12 @@ static void APP_TaskHandler(void)
 int main(void)
 {
   SYS_Init();
+  
+  slaveCount = 2;
+  slaves[0].ID = 1;
+  slaves[0].command[0] = 0;
+  slaves[1].ID = 2;
+  slaves[1].command[0] = 0;
    
   while (1)
   {

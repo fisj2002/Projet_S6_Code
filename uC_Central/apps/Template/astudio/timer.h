@@ -12,8 +12,8 @@
 #include "math.h"
 #include <avr/interrupt.h>
 
-#define DELAY 10 // Timer delay in ms
-#define TIMER_COUNT (DELAY*8000000L/1024000 - 1) // 16000000 = CPU_CLK_HZ mais le include ne fonctionne pas; hotfix -Chuck
+#define DELAY 20 // Timer delay in ms
+#define TIMER_COUNT (DELAY*8000000L/1024000 - 1) // 8000000 = CPU_CLK_HZ mais le include ne fonctionne pas; hotfix -Chuck
 
 void init_Timer(void);
 #endif /* TIMER_H_ */

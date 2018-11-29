@@ -130,7 +130,7 @@ int SendUart(UART_System* UART, const char * message)
 	{
 		++ bytesQueued;
 		
-		if(*message == 0)
+		if(*message == 0 || *message == '\0')
 			break;
 			
 		++message;

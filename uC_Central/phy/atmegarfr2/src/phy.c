@@ -90,7 +90,7 @@ void PHY_Init(void)
   phyState = PHY_STATE_IDLE;
 
   phyTrxSetState(TRX_CMD_TRX_OFF); //TRX off ==> ni en réception, ni en transmission; "clock state", datasheet p40
-  PHY_SetChannel(15); //channel par défaut 2425 MHz; peut être réassigné par l'application principale
+  PHY_SetChannel(47); //channel par défaut 2425 MHz; peut être réassigné par l'application principale
 
   TRX_RPC_REG = TRX_RPC_REG_VALUE; //reduced power consumption
 
