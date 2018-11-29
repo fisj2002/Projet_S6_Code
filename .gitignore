@@ -111,3 +111,6 @@ typings/
 
 # Compiled binaries
 release-builds/
+
+# Package lock
+package-lock.json

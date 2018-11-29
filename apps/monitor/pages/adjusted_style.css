@@ -1,0 +1,19 @@
+body {
+    display: flex;
+    min-height: 100vh;
+    flex-direction: column;
+}
+
+main {
+    flex: 1 0 auto;
+}
+
+i.tab-icon {
+    /* Aligning icons in tabs */
+    vertical-align: -30%;
+}
+
+.no-margin{
+  margin-bottom: 0px;
+  margin-top: 0px;
+}
