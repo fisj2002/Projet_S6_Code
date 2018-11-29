@@ -59,8 +59,8 @@
 typedef struct{
 	char temp;
 	char mouv;
-	float lon;
-	float lat;
+	char lon[4];
+	char lat[4];
 } data;
 
 typedef struct{
@@ -134,33 +134,17 @@ static void APP_TaskHandler(void)
 		switch (receivedCommand[1])
 		{
 			case 'A':
-			case 'a':
-			{
-				char check;
-				ExtractRxUart(GetUART1(), &check, 1);
-				if (check == 'E')
-				{
-					SendnUart(GetUART1(), &receivedUART, 1);
-					SendUart(GetUART1(), " - Activation de l'actionneur\n\r");
-					sprintf(slaves[receivedCommand[0]-1].command, "S%c%cE", receivedCommand[0], receivedCommand[1]);
-				}
-				break;
-			}
-			
 			case 'D':
-			case 'd':
 			{
 				char check;
 				ExtractRxUart(GetUART1(), &check, 1);
 				if (check == 'E')
 				{
 					SendnUart(GetUART1(), &receivedUART, 1);
-					SendUart(GetUART1(), " - Désactivation de l'actionneur\n\r");
 					sprintf(slaves[receivedCommand[0]-1].command, "S%c%cE", receivedCommand[0], receivedCommand[1]);
 				}
 				break;
 			}
-			case 'l':
 			case 'L':
 			{
 				char check;
@@ -180,24 +164,21 @@ static void APP_TaskHandler(void)
 				}
 				break;
 			}
-			case 'X':
-			case 'x':
-			{
-				char check;
-				ExtractRxUart(GetUART1(), &check, 1);
-				if (check == 'E')
-				{
-					SendnUart(GetUART1(), &receivedUART, 1);
-					SendUart(GetUART1(), " - Ajout d'une ruche\n\r");
-					sprintf(slaves[receivedCommand[0]-1].command, "S%c%cE", receivedCommand[0], receivedCommand[1]);
-				}
-				break;
-			}
+			
+//			case 'X':
+//			{
+//				char check;
+//				ExtractRxUart(GetUART1(), &check, 1);
+//				if (check == 'E')
+//				{
+//					SendnUart(GetUART1(), &receivedUART, 1);
+//					sprintf(slaves[receivedCommand[0]-1].command, "S%c%cE", receivedCommand[0], receivedCommand[1]);
+//				}
+//				break;
+//			}
 
 			default:
 			{
-				SendnUart(GetUART1(), &receivedUART, 1);
-				SendUart(GetUART1(), " n'est pas une commande reconnue\n\r");
 				break;
 			}
 		}
@@ -211,23 +192,11 @@ static void APP_TaskHandler(void)
 		{
 			if(ind.data[0] == 'S' && ind.data[1] == slaves[slavePos].ID && ind.data[13] == 'E')
 			{
-				SendnUart(GetUART1(), ind.data, 14);
-				SendnUart(GetUART1(), "\r\n", 2);
-				SendUart(GetUART1(), "ID: ");
-				char IDstr[1];
-				sprintf(IDstr, "%c", ind.data[1] + '0');
-				SendnUart(GetUART1(), IDstr, 1);
-				SendnUart(GetUART1(), "\r\n", 2);
-				SendUart(GetUART1(), "Temp: ");
-				char tempstr[4];
-				sprintf(tempstr, "%d", (int8_t) ind.data[3]);
-				SendUart(GetUART1(), tempstr);
-				SendnUart(GetUART1(), "\r\n", 2);
-				/*SendUart(GetUART1(), "\n\rLongitude de la ruche: ");
-				SendnUart(GetUART1(), ind.data[2], 3);
-				SendUart(GetUART1(), "\n\rLatitude de la ruche: ");
-				SendnUart(GetUART1(), ind.data[2], 3);*/
-				
+				slaves[ind.data[1]].data.temp = ind.data[3];
+				slaves[ind.data[1]].data.mouv = ind.data[4];
+				slaves[ind.data[1]].data.lon = &ind.data[5];
+				slaves[ind.data[1]].data.lat = &ind.data[9];
+				SendUart(GetUART1(), int.data);
 				break;
 			}
 			receivedWireless = 0;
@@ -235,15 +204,9 @@ static void APP_TaskHandler(void)
 		timeBeforeTimeout++;
 	}
 	
-	if(timeBeforeTimeout >= 16000)
+	if(timeBeforeTimeout < 16000)
 	{
-		char err[32];
-		sprintf(err, "Err slave %c\n\r", slavePos + '1');
-		//SendUart(GetUART1(), err);
-	}
-	else
-	{
-		slaves[slavePos].command[0] = 0;
+			slaves[slavePos].command[0] = 0;
 	}
 	
 	slavePos++;
