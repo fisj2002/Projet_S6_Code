@@ -15,33 +15,59 @@
     <header>
         <ul id="tabs-swipe-demo" class="tabs black">
             <li class="tab col s6">
-                <a class="active" href="#test-swipe-1">
+                <a class="active" href="#mosaic-tab">
                     <i class="material-icons tab-icon">view_module</i>
                     <span> Mosaique</span>
                 </a>
             </li>
             <li class="tab col s6">
-                <a href="#test-swipe-2">
+                <a href="#map-tab">
                     <i class="material-icons tab-icon">map</i>
                     <span> Carte</span>
                 </a>
             </li>
         </ul>
     </header>
+
     <main style="height: 100%">
-        <div id="test-swipe-1" class="s12 container row">
 
-
+        <div id="mosaic-tab" class="s12 row">
+            <div class="preloader-wrapper big center">
+                <div class="spinner-layer">
+                    <div class="circle-clipper left">
+                        <div class="circle"></div>
+                    </div>
+                    <div class="gap-patch">
+                        <div class="circle"></div>
+                    </div>
+                    <div class="circle-clipper right">
+                        <div class="circle"></div>
+                    </div>
+                </div>
+            </div>
         </div>
-        <div id="test-swipe-2"  style="height: 100%" class="s12 red">
-            <p>Carte</p>
+
+        <div id="map-tab" class="s12 row">
+            <div class="preloader-wrapper big center">
+                <div class="spinner-layer">
+                    <div class="circle-clipper left">
+                        <div class="circle"></div>
+                    </div>
+                    <div class="gap-patch">
+                        <div class="circle"></div>
+                    </div>
+                    <div class="circle-clipper right">
+                        <div class="circle"></div>
+                    </div>
+                </div>
+            </div>
         </div>
     </main>
 
     <footer class="page-footer">
         <div class="container">
             <h6 class="no-margin">
-                Select uart device:  
+                <span>Select uart device: </span>
                 <span>
                     <a class='dropdown-trigger btn' href='#' data-target='dropdown1'>Interface</a>
                     <div class="row">
@@ -55,16 +81,12 @@
         </div>
     </footer>
 
-
+    <!--List updating script to refresh data-->
+    <script type="text/javascript" src="index.js"></script>
     <!--JavaScript at end of body for optimized loading-->
     <script type="text/javascript" src="../node_modules/materialize-css/dist/js/materialize.js"></script>
     <!--Materialize element Intializer-->
-    <script type="text/javascript">
-        M.AutoInit();
-        var instance = M.Tabs.init(el, {
-
-        });
-    </script>
+    <script type="text/javascript">M.AutoInit();</script>
 </body>
 
 </html>

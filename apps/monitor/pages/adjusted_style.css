@@ -17,3 +17,16 @@ i.tab-icon {
   margin-bottom: 0px;
   margin-top: 0px;
 }
+
+.center {
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+    margin-top: 150px;
+    width: 50%;
+    height: 100%;
+}
+
+.secondary-content {
+    color: black;
+}

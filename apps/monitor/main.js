@@ -8,7 +8,7 @@ let availableInterfaces = [];
 let chosenInterface;
 let beeInterface;
 
-let hives;
+let hives = [];
 
 // Refresh data from hardware periodically
 setInterval(()=>{
@@ -45,4 +45,14 @@ electron.app.on('ready', ()=>{
     });
     mainWindow.loadFile('pages/index.html');
     mainWindow.on('closed', ()=>{electron.app.quit()})
+});
+
+// Main window data request
+electron.ipcMain.on('slave-list-request',(event)=>{
+    event.sender.send('slave-list-response', hives);
+});
+
+// Main window interface list request
+electron.ipcMain.on('interface-list-request',(event)=>{
+    event.sender.send('interface-list-response', availableInterfaces, chosenInterface);
 });
