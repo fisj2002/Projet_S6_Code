@@ -1,9 +1,11 @@
 const electron = require('electron');
 const BeeInterface = require('./bee/BeeInterface');
 
-const REFRESH_INTERVAL_MS = 1500;
+const REFRESH_INTERVAL_MS = 10000;
 
 let mainWindow;
+let mainWindowReady = false;
+
 let availableInterfaces = [];
 let chosenInterface;
 let beeInterface;
@@ -11,48 +13,77 @@ let beeInterface;
 let hives = [];
 
 // Refresh data from hardware periodically
-setInterval(()=>{
-    BeeInterface.listInterfaces().then(list =>{
+setInterval(refreshHardware, REFRESH_INTERVAL_MS);
+
+electron.app.on('ready', () => {
+    mainWindow = new electron.BrowserWindow({
+        icon: './assets/icons/win/bee.ico',
+        height: 800,
+        width: 1000
+    });
+    mainWindow.loadFile('pages/index.html');
+    mainWindow.on('closed', () => { electron.app.quit() })
+});
+
+electron.ipcMain.on('main-window-ready', () => {
+    mainWindowReady = true;
+    updateMain();
+})
+
+
+electron.ipcMain.on('actuator-order', (event, slaveId, state) => {
+    let promise;
+  
+    if (state)
+        promise = beeInterface.enableActuator(slaveId)
+    else
+        promise = beeInterface.disableActuator(slaveId)
+    
+    promise.then(()=>{
+        hives = beeInterface.getSlaves();
+        updateMain();
+    })
+})
+
+// Start checking hardware
+refreshHardware();
+
+// Send main window updated data
+function updateMain() {
+    mainWindow.webContents.send('slave-list', hives);
+    mainWindow.webContents.send('interface-list', availableInterfaces, chosenInterface);
+}
+
+function refreshHardware() {
+    BeeInterface.listInterfaces().then(list => {
         availableInterfaces = list;
 
-        if((!chosenInterface) && list.length > 0) 
-        {
+        // First connection
+        if ((!chosenInterface) && list.length > 0) {
             chosenInterface = list[0];
             beeInterface = new BeeInterface(chosenInterface.comName);
+            beeInterface.once('ready', () => {
+                queryHardware();
+            })
         }
     });
 
-    if(beeInterface)
-    {
-        beeInterface.update().then(()=>{
-            hives = beeInterface.getSlaves();
-        }).catch((error)=>{
-            if (chosenInterface.name.match(/arduino/i))
-            {   
-                console.log("Arduino reset delay");
-            }
-            else
-                throw error;
-        });
-    }
+    if (beeInterface)
+        queryHardware();
+}
 
-}, REFRESH_INTERVAL_MS);
-
-
-electron.app.on('ready', ()=>{
-    mainWindow = new electron.BrowserWindow({
-        icon: './assets/icons/win/bee.ico'
+function queryHardware() {
+    beeInterface.update().then(() => {
+        hives = beeInterface.getSlaves();
+        if (mainWindowReady)
+            updateMain();
+    }).catch((error) => {
+        console.log("Failed to connect to master");
+        if (chosenInterface.name.match(/arduino/i)) {
+            console.log("Arduino reset delay ?");
+        }
+        hives = beeInterface.getSlaves();
+        if (mainWindowReady)
+            updateMain();
     });
-    mainWindow.loadFile('pages/index.html');
-    mainWindow.on('closed', ()=>{electron.app.quit()})
-});
-
-// Main window data request
-electron.ipcMain.on('slave-list-request',(event)=>{
-    event.sender.send('slave-list-response', hives);
-});
-
-// Main window interface list request
-electron.ipcMain.on('interface-list-request',(event)=>{
-    event.sender.send('interface-list-response', availableInterfaces, chosenInterface);
-});
+}

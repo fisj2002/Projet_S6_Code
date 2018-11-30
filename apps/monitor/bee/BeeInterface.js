@@ -17,6 +17,11 @@ class BeeInterface extends EventEmitter
 
         this._port = new SerialPort(comName, 
             {baudRate: settings.DEFAULT_BAUD_RATE});
+        
+        // Emit an event to signify the interface is ready to communicate
+        this._port.once('open', ()=>{
+            this.emit('ready');
+        })
 
         // The array containing the current active requests
         this._outboundRequests = [];
