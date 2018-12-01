@@ -223,6 +223,7 @@ static void APP_TaskHandler(void)
 	
 		if(timeBeforeTimeout >= 5000)
 		{
+			slaves[slavePos].state = 'X';
 			timeBeforeTimeout = 0;
 			slavePos = (slavePos + 1) % slaveCount;
 			sendFlag = 0;
