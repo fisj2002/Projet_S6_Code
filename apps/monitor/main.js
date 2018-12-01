@@ -34,13 +34,13 @@ electron.ipcMain.on('main-window-ready', () => {
 
 electron.ipcMain.on('actuator-order', (event, slaveId, state) => {
     let promise;
-  
+
     if (state)
         promise = beeInterface.enableActuator(slaveId)
     else
         promise = beeInterface.disableActuator(slaveId)
-    
-    promise.then(()=>{
+
+    promise.then(() => {
         hives = beeInterface.getSlaves();
         updateMain();
     })
@@ -63,6 +63,7 @@ function refreshHardware() {
         if ((!chosenInterface) && list.length > 0) {
             chosenInterface = list[0];
             beeInterface = new BeeInterface(chosenInterface.comName);
+            beeInterface.on('alert', (slaveId) => { sendAlert(slaveId) });
             beeInterface.once('ready', () => {
                 queryHardware();
             })
@@ -87,4 +88,10 @@ function queryHardware() {
         if (mainWindowReady)
             updateMain();
     });
+}
+
+function sendAlert(slaveId) {
+    // Check if slave is part of list
+    console.log(`Alerte recue sur ruche # ${slaveId}`)
+    mainWindow.webContents.send('alert', slaveId);
 }

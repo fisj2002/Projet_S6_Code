@@ -1,11 +1,13 @@
 const electron = require('electron');
 const fs = require('fs');
 const equal = require('deep-equal');
+const roundTo = require('round-to');
 
 var card = fs.readFileSync('pages/cards.html', { encoding: 'utf8' });
 var loader = fs.readFileSync('pages/loader.html', { encoding: 'utf8' });
 
 var interfaceListSaved = [];
+var unreadAlert = [];
 var currentInterfaceSaved;
 
 // Wait for data reception
@@ -19,8 +21,8 @@ electron.ipcRenderer.on('slave-list', (event, slaveList) => {
         // Updating the values of every element
         cards = document.getElementsByClassName('hive-card');
 
-        for(let index = 0; index < cards.length; ++index){
-            
+        for (let index = 0; index < cards.length; ++index) {
+
             // Updating id
             cards.item(index).id = `hive-${slaveList[index].id}`;
             cards.item(index).getElementsByClassName('card-id').item(0).innerHTML =
@@ -36,53 +38,54 @@ electron.ipcRenderer.on('slave-list', (event, slaveList) => {
 
             // Updating position
             cards.item(index).getElementsByClassName('card-position').item(0).innerHTML =
-                `${Math.abs(slaveList[index].latitude)}°${slaveList[index].latitude >= 0 ? 'N':'S'} \
-                ${Math.abs(slaveList[index].longitude)}°${slaveList[index].longitude >= 0 ? 'E':'W'}`;
-            
+                `${roundTo(Math.abs(slaveList[index].latitude), 6)}°${slaveList[index].latitude >= 0 ? 'N' : 'S'} \
+                ${roundTo(Math.abs(slaveList[index].longitude), 6)}°${slaveList[index].longitude >= 0 ? 'E' : 'W'}`;
+
             // Updating actuator
             let checkbox = cards.item(index).getElementsByClassName('card-actuator').item(0);
             checkbox.checked = slaveList[index].actuatorEnabled;
-            checkbox.onclick = ()=>{
+            checkbox.onclick = () => {
                 checkbox.disabled = true;
                 console.log(slaveList)
                 electron.ipcRenderer.send('actuator-order', slaveList[index].id, checkbox.checked)
             }
 
+            // Alerts
+            if (unreadAlert[slaveList[index].id])
+                cards.item(index).getElementsByClassName('card-badge')
+                    .item(0).classList.add('new');
+
             // Updating motion sensor
-            cards.item(index).getElementsByClassName('card-motion').item(0).innerHTML = 
+            cards.item(index).getElementsByClassName('card-motion').item(0).innerHTML =
                 slaveList[index].movement ? 'directions_walk' : 'visibility_off';
             cards.item(index).getElementsByClassName('card-motion').item(0).style.color =
                 slaveList[index].movement ? 'red' : 'black';
         }
     }
-    else
-    {
+    else {
         document.getElementById('mosaic-tab').innerHTML = loader;
         document.getElementById('map-tab').innerHTML = loader;
     }
 });
 
 electron.ipcRenderer.on('interface-list', (event, interfaceList, current) => {
-    
+
     // Only execute if the selection has changed
-    if (!(equal(interfaceList, interfaceListSaved) && equal(current, currentInterfaceSaved)))
-    {
+    if (!(equal(interfaceList, interfaceListSaved) && equal(current, currentInterfaceSaved))) {
         let selector = document.createElement("select");
 
-        if(interfaceList.length <= 0)
-        {
+        if (interfaceList.length <= 0) {
             let element = document.createElement("option");
             element.disabled = true;
-            element.setAttribute('selected',true)
+            element.setAttribute('selected', true)
             element.appendChild(document.createTextNode("No interface available"));
-            selector.appendChild(element);           
+            selector.appendChild(element);
         }
-        else
-        {
-            interfaceList.forEach((interface)=>{
+        else {
+            interfaceList.forEach((interface) => {
                 let element = document.createElement("option");
                 if (current.comName == interface.comName)
-                    element.setAttribute('selected',true);
+                    element.setAttribute('selected', true);
                 element.appendChild(document.createTextNode(`${interface.name} (${interface.comName})`));
                 selector.appendChild(element);
             })
@@ -99,7 +102,18 @@ electron.ipcRenderer.on('interface-list', (event, interfaceList, current) => {
     currentInterfaceSaved = current;
 })
 
+
+// Alert coming in from slave
+electron.ipcRenderer.on('alert', (event, slaveId) => {
+    // Display notification bagde
+    document.getElementById(`hive-${slaveId}`)
+        .getElementsByClassName('card-badge')
+        .item(0).classList.add('new');
+
+    unreadAlert[slaveId] = true;
+})
+
 // Instruct the main process to start sending data
-window.onload = ()=>{
+window.onload = () => {
     electron.ipcRenderer.send('main-window-ready');
 }

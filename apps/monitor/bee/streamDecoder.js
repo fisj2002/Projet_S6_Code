@@ -116,8 +116,8 @@ class StreamDecoder extends Writable {
                     this._currentMessage.movement = this._bufferView.getUint8(1) != 0;
                     
                     // Small endian decoding coming from micro-controller
-                    this._currentMessage.longitude = this._bufferView.getFloat32(2, true);
-                    this._currentMessage.latitude = this._bufferView.getFloat32(6, true);
+                    this._currentMessage.latitude = this._bufferView.getFloat32(2, true);
+                    this._currentMessage.longitude = this._bufferView.getFloat32(6, true);
 
                     // Waiting last char
                     this._mefState = MEF_END_CHAR;
