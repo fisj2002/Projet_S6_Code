@@ -49,6 +49,7 @@
 #include "phy.h"
 #include "uart.h"
 #include "timer.h"
+#include <string.h>
 #include <stdarg.h>
 
 /*- Definitions ------------------------------------------------------------*/
@@ -194,9 +195,15 @@ static void APP_TaskHandler(void)
 			{
 				slaves[ind.data[1]].data.temp = ind.data[3];
 				slaves[ind.data[1]].data.mouv = ind.data[4];
-				for (int i = 0; i <= 3; i++) {slaves[ind.data[1]].data.lon[i] = ind.data[5 + i]; }
-				for (int i = 0; i <= 3; i++) {slaves[ind.data[1]].data.lat[i] = ind.data[9 + i]; }
-				SendUart(GetUART1(), int.data);
+				for (int i = 0; i <= 3; i++) 
+				{
+					slaves[ind.data[1]].data.lon[i] = ind.data[5 + i];
+				}
+				for (int i = 0; i <= 3; i++)
+				{
+					slaves[ind.data[1]].data.lat[i] = ind.data[9 + i];
+				}
+				SendUart(GetUART1(), ind.data);
 				break;
 			}
 			receivedWireless = 0;
