@@ -63,13 +63,21 @@ class BeeInterface extends EventEmitter
         }
         else    // Slave response
         {
+            let dissconnect = false
+
             if(message.command == settings.prot.SENSORS_RESPONSE)
                 message.command = settings.prot.SENSORS_COMMAND;
+            else if(message.command == settings.prot.DISCONNECTED_SIGNAL){
+                message.command = settings.prot.SENSORS_COMMAND;
+                dissconnect = true;
+            }
 
             if (! this._hives[message.sourceId])
                 this._hives[message.sourceId] = new Hive(message.sourceId);
 
             this._hives[message.sourceId].addEvent(message);
+            if(dissconnect)
+                this._hives[message.sourceId].addConnectionLost();
         }
 
         // Call the callback of the first matching request

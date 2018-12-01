@@ -18,5 +18,6 @@ module.exports =
         ACTUATOR_ON_COMMAND: 'A'.charCodeAt(0),
         ACTUATOR_OFF_COMMAND: 'D'.charCodeAt(0),
         ALERT_COMMAND: 'N'.charCodeAt(0),
+        DISCONNECTED_SIGNAL: 'X'.charCodeAt(0),
     }
 }

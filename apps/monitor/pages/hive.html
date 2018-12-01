@@ -3,69 +3,72 @@
 
 <head>
     <meta charset="UTF-8">
-    <title>BeeWatch</title>
     <!--Import Google Icon Font-->
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
     <!--Import materialize.css-->
     <link type="text/css" rel="stylesheet" href="../node_modules/materialize-css/dist/css/materialize.css" media="screen,projection" />
+    <link rel="stylesheet" type="text/css" href="adjusted_style.css">
 </head>
 
 <body>
-    <nav class="black">
-        <div class="nav-wrapper container">
-            <a href="#!" class="brand-logo left">
-                Ruche # <span id="hiveID">1</span>
-            </a>
+    <header>
+        <nav class="black">
+            <div class="nav-wrapper container">
+                <a href="#!" class="brand-logo left amber-text">
+                    Ruche # <span id="hiveID">1</span>
+                </a>
+            </div>
+        </nav>
+    </header>
+    <main>
+        <div class="container">
+            <ul class="collapsible">
+                <li>
+                    <div class="collapsible-header">
+                        <i class="material-icons">wb_sunny</i>
+                        Température
+                        <span class="badge"><span id="quick-temp">~</span> °C</span>
+                    </div>
+                    <div class="collapsible-body">
+
+                    </div>
+                </li>
+                <li>
+                    <div class="collapsible-header">
+                        <i class="material-icons">gps_fixed</i>
+                        Position
+                        <span class="badge">
+                            <span id="quick-long">~</span> °
+                            <span id="quick-lat">~</span> °
+                        </span>
+                    </div>
+                    <div class="collapsible-body"><span>Lorem ipsum dolor sit amet.</span></div>
+                </li>
+                <li>
+                    <div class="collapsible-header">
+                        <i class="material-icons">videocam</i>
+                        Détecteur de mouvement
+                        <span class="badge">~</span>
+                    </div>
+                    <div class="collapsible-body"><span>Lorem ipsum dolor sit amet.</span></div>
+                </li>
+                <li>
+                    <div class="collapsible-header">
+                        <i class="material-icons">notifications</i>
+                        Alertes
+                        <span class="badge" id="quick-alert">
+                            0
+                        </span>
+                    </div>
+                    <div class="collapsible-body"><span>Lorem ipsum dolor sit amet.</span></div>
+                </li>
+                <li>
+                    <div class="collapsible-header"><i class="material-icons">list</i>Logs</div>
+                    <div class="collapsible-body"><span>Lorem ipsum dolor sit amet.</span></div>
+                </li>
+            </ul>
         </div>
-    </nav>
-    <div class="container">
-        <ul class="collapsible">
-            <li>
-                <div class="collapsible-header">
-                    <i class="material-icons">wb_sunny</i>
-                    Température
-                    <span class="badge"><span id="quick-temp">~</span> °C</span>
-                </div>
-                <div class="collapsible-body">
-
-                </div>
-            </li>
-            <li>
-                <div class="collapsible-header">
-                    <i class="material-icons">gps_fixed</i>
-                    Position
-                    <span class="badge">
-                        <span id="quick-long">~</span> °
-                        <span id="quick-lat">~</span> °
-                    </span>
-                </div>
-                <div class="collapsible-body"><span>Lorem ipsum dolor sit amet.</span></div>
-            </li>
-            <li>
-                <div class="collapsible-header">
-                    <i class="material-icons">videocam</i>
-                    Détecteur de mouvement
-                    <span class="badge">~</span>
-                </div>
-                <div class="collapsible-body"><span>Lorem ipsum dolor sit amet.</span></div>
-            </li>
-            <li>
-                <div class="collapsible-header">
-                    <i class="material-icons">notifications</i>
-                    Alertes
-                    <span class="badge" id="quick-alert">
-                        0
-                    </span>
-                </div>
-                <div class="collapsible-body"><span>Lorem ipsum dolor sit amet.</span></div>
-            </li>
-            <li>
-                <div class="collapsible-header"><i class="material-icons">list</i>Logs</div>
-                <div class="collapsible-body"><span>Lorem ipsum dolor sit amet.</span></div>
-            </li>
-        </ul>
-
-    </div>
+    </main>
 
     <!--JavaScript at end of body for optimized loading-->
     <script type="text/javascript" src="../node_modules/materialize-css/dist/js/materialize.js"></script>

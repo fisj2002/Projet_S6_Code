@@ -94,6 +94,7 @@ class StreamDecoder extends Writable {
                     case settings.prot.ACTUATOR_ON_COMMAND:
                     case settings.prot.ALERT_COMMAND:
                     case settings.prot.SENSORS_RESPONSE:
+                    case settings.prot.DISCONNECTED_SIGNAL:
                         this._currentMessage.command = nextChar;
                         this._expectedChars = 10;
                         this._mefState = MEF_SLAVE_DATA;

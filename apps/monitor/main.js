@@ -10,7 +10,7 @@ let availableInterfaces = [];
 let chosenInterface;
 let beeInterface;
 
-let hives = [];
+let hiveWindows = [];
 
 // Refresh data from hardware periodically
 setInterval(refreshHardware, REFRESH_INTERVAL_MS);
@@ -41,9 +41,23 @@ electron.ipcMain.on('actuator-order', (event, slaveId, state) => {
         promise = beeInterface.disableActuator(slaveId)
 
     promise.then(() => {
-        hives = beeInterface.getSlaves();
         updateMain();
     })
+})
+
+// Opening detailed hive
+electron.ipcMain.on('open-hive', (event, slaveId) => {
+    if (hiveWindows[slaveId]) {
+        hiveWindows[slaveId].focus();
+    }
+    else {
+        hiveWindows[slaveId] = new electron.BrowserWindow({
+            icon: './assets/icons/win/bee.ico',
+            title: `Ruche # ${slaveId}`,
+        });
+        hiveWindows[slaveId].loadFile('pages/hive.html');
+        hiveWindows[slaveId].on('closed', () => { hiveWindows[slaveId] = null })
+    }
 })
 
 // Start checking hardware
@@ -51,7 +65,7 @@ refreshHardware();
 
 // Send main window updated data
 function updateMain() {
-    mainWindow.webContents.send('slave-list', hives);
+    mainWindow.webContents.send('slave-list', beeInterface ? beeInterface.getSlaves() : []);
     mainWindow.webContents.send('interface-list', availableInterfaces, chosenInterface);
 }
 
@@ -63,7 +77,9 @@ function refreshHardware() {
         if ((!chosenInterface) && list.length > 0) {
             chosenInterface = list[0];
             beeInterface = new BeeInterface(chosenInterface.comName);
-            beeInterface.on('alert', (slaveId) => { sendAlert(slaveId) });
+            beeInterface.on('alert', (slaveId) => {
+                mainWindow.webContents.send('alert', slaveId);
+            });
             beeInterface.once('ready', () => {
                 queryHardware();
             })
@@ -76,7 +92,6 @@ function refreshHardware() {
 
 function queryHardware() {
     beeInterface.update().then(() => {
-        hives = beeInterface.getSlaves();
         if (mainWindowReady)
             updateMain();
     }).catch((error) => {
@@ -84,14 +99,7 @@ function queryHardware() {
         if (chosenInterface.name.match(/arduino/i)) {
             console.log("Arduino reset delay ?");
         }
-        hives = beeInterface.getSlaves();
         if (mainWindowReady)
             updateMain();
     });
-}
-
-function sendAlert(slaveId) {
-    // Check if slave is part of list
-    console.log(`Alerte recue sur ruche # ${slaveId}`)
-    mainWindow.webContents.send('alert', slaveId);
 }

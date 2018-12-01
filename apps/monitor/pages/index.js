@@ -28,6 +28,11 @@ electron.ipcRenderer.on('slave-list', (event, slaveList) => {
             cards.item(index).getElementsByClassName('card-id').item(0).innerHTML =
                 slaveList[index].id;
 
+            // Open link
+            cards.item(index).getElementsByClassName('card-link').item(0).onclick = () => {
+                electron.ipcRenderer.send('open-hive', slaveList[index].id);
+            }
+
             // Updating temperature
             cards.item(index).getElementsByClassName('card-temp').item(0).innerHTML =
                 slaveList[index].temperature;
@@ -46,7 +51,6 @@ electron.ipcRenderer.on('slave-list', (event, slaveList) => {
             checkbox.checked = slaveList[index].actuatorEnabled;
             checkbox.onclick = () => {
                 checkbox.disabled = true;
-                console.log(slaveList)
                 electron.ipcRenderer.send('actuator-order', slaveList[index].id, checkbox.checked)
             }
 
@@ -111,6 +115,15 @@ electron.ipcRenderer.on('alert', (event, slaveId) => {
         .item(0).classList.add('new');
 
     unreadAlert[slaveId] = true;
+})
+
+// Checking for read notifications
+electron.ipcRenderer.on('ack-alert', (event, slaveId) => {
+    if (unreadAlert[slaveId]) {
+        unreadAlert[slaveId] = false
+        cards.item(index).getElementsByClassName('card-badge')
+            .item(0).classList.remove('new');
+    }
 })
 
 // Instruct the main process to start sending data
