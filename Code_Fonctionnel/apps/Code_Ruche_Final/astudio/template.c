@@ -148,7 +148,10 @@ static void APP_TaskHandler(struct InfoRuche *dataStruct, char *paquet)
 				}
 			}
 		}
-		
+		else
+		{
+			receivedWireless = 0;
+		}
 		
 	}
   }
@@ -347,6 +350,16 @@ int main(void)
 	unsigned char NMEAGPS[RX_BUFFER_SIZE];	//receive buffer for GPS data (max size)
 	char paquet[LONG_TRAMME]; //déclaration du tableau pour storer la tramme à envoyer
 	
+	//init antenne externe
+	ANT_DIV |= (1<<ANT_EXT_SW_EN); //active le mode manuel pour antenne
+	ANT_DIV |= (1<<ANT_CTRL0);
+	ANT_DIV &= ~(1<<ANT_CTRL1); //Passe sur antenne externe
+	
+	//ANT_DIV |= (1<<ANT_CTRL1);
+	//ANT_DIV &= ~(1<<ANT_CTRL0); //Passe sur antenne interne
+	
+	
+	
 	//init protocols
 	SYS_Init();
 	TWI_Master_Initialise();
@@ -407,6 +420,7 @@ int main(void)
 		if(sensor)	//set action pour data sensor
 		{
 			action = 'F';
+			sensor = false;
 		}
 		
 		//ajouter alarme
