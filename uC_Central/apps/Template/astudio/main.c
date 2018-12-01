@@ -66,8 +66,9 @@ typedef struct{
 
 typedef struct{
 	char ID;
+	char state;
 	data data;
-	char command[64];
+	char command;
 } slave;
 
 /*- Prototypes -------------------------------------------------------------*/
@@ -84,6 +85,8 @@ uint8_t receivedWireless;	//cette variable deviendra 1 lorsqu'un nouveau paquet 
 							//il faut la mettre a 0 apres avoir géré le paquet; tout message recu via wireless pendant que cette variable est a 1 sera jeté
 
 PHY_DataInd_t ind; //cet objet contiendra les informations concernant le dernier paquet qui vient de rentrer
+char sendFlag = 0;
+int timeBeforeTimeout = 0;
 
 int slaveCount = 0;
 int slavePos = 0;
@@ -92,33 +95,8 @@ slave slaves[8];
 
 // Put your function implementations here
 
-/*************************************************************************//**
+/*****************************************************************************
 *****************************************************************************/ 
-/*static void APP_TaskHandler(void)
-{
-	char receivedUart = 0;
-
-	receivedUart = Lis_UART();
-	if(receivedUart)		//est-ce qu'un caractere a été recu par l'UART?
-	{
-		Ecris_UART(receivedUart);	//envoie l'echo du caractere recu par l'UART
-
-		if(receivedUart == 'a')	//est-ce que le caractere recu est 'a'?
-		{
-			uint8_t demonstration_string[128] = "123456789A"; //data packet bidon
-			Ecris_Wireless(demonstration_string, 10); //envoie le data packet; nombre d'éléments utiles du paquet à envoyer
-		}
-	}
-
-	if(receivedWireless == 1) //est-ce qu'un paquet a été recu sur le wireless?
-	{
-		char buf[196];
-
-		Ecris_UART_string( "\n\rnew trame! size: %d, RSSI: %ddBm\n\r", ind.size, ind.rssi );
-		Ecris_UART_string( "contenu: %s", ind.data );
-		receivedWireless = 0;
-	}
-}*/
 
 static void APP_TaskHandler(void)
 {
@@ -128,42 +106,54 @@ static void APP_TaskHandler(void)
 	
 	if (receivedUART == 'S')
 	{
-		char receivedCommand[2];
+		char receivedCommand[2] = { 0 };
+		
+		while (GetRxCountUart(GetUART1()) < 2);
 		
 		ExtractRxUart(GetUART1(), receivedCommand, 2);
 		
 		switch (receivedCommand[1])
 		{
-			//case 'A':
-			//case 'D':
-			//{
-				//char check;
-				//ExtractRxUart(GetUART1(), &check, 1);
-				//if (check == 'E')
-				//{
-					//SendnUart(GetUART1(), &receivedUART, 1);
-					//sprintf(slaves[receivedCommand[0]-1].command, "S%c%cE", receivedCommand[0], receivedCommand[1]);
-				//}
-				//break;
-			//}
-			//case 'F':
-			//{
-				//char check;
-				//ExtractRxUart(GetUART1(), &check, 1);
-				//if (check == 'E')
-				//{
-					//char mess[15];
-					//sprintf(mess, "S%cF%c%c00000000E", slaves[receivedCommand[0]-1].ID, slaves[receivedCommand[0]-1].data.temp, slaves[receivedCommand[0]-1].data.mouv);
-					//memcpy(mess + 5, slaves[receivedCommand[0]-1].data.lon, 4);
-					//memcpy(mess + 9, slaves[receivedCommand[0]-1].data.lat, 4);
-					//SendnUart(GetUART1(), mess, 14);
-				//}
-				//break;
-			//}
+			case 'A':
+			case 'D':
+			{
+				char check;
+				
+				while (GetRxCountUart(GetUART1()) < 1);
+				ExtractRxUart(GetUART1(), &check, 1);
+				
+				if (check == 'E')
+				{
+					slaves[receivedCommand[0]-1].command = receivedCommand[1];
+				}
+				break;
+			}
+			
+			case 'F':
+			{
+				char check;
+				
+				while (GetRxCountUart(GetUART1()) < 1);
+				ExtractRxUart(GetUART1(), &check, 1);
+				
+				if (check == 'E')
+				{
+					char mess[15];
+					sprintf(mess, "S%c%c%c%c00000000E", slaves[receivedCommand[0]-1].ID,  slaves[receivedCommand[0]-1].state, slaves[receivedCommand[0]-1].data.temp, slaves[receivedCommand[0]-1].data.mouv);
+					memcpy(mess + 5, slaves[receivedCommand[0]-1].data.lon, 4);
+					memcpy(mess + 9, slaves[receivedCommand[0]-1].data.lat, 4);
+					SendnUart(GetUART1(), mess, 14);
+				}
+				break;
+			}
+			
 			case 'L':
 			{
 				char check;
+				
+				while (GetRxCountUart(GetUART1()) < 1);
 				ExtractRxUart(GetUART1(), &check, 1);
+				
 				if (check == 'E')
 				{
 					char mess[32] = { 'S', 0xFF, 'L', slaveCount };
@@ -178,7 +168,7 @@ static void APP_TaskHandler(void)
 					SendUart(GetUART1(), mess);
 				}
 				break;
-			}
+			}		
 			
 //			case 'X':
 //			{
@@ -198,48 +188,49 @@ static void APP_TaskHandler(void)
 			}
 		}
 	}
-
-	int timeBeforeTimeout = 0;
-	while(timeBeforeTimeout < 300)
-	{	
-		PHY_TaskHandler();
-		if(receivedWireless == 1)
+	
+	if (!sendFlag)
+	{
+		receivedWireless = 0;
+		
+		char CMD[4] = { 0 };
+		sprintf(CMD, "S%c%cE", slaves[slavePos].ID, slaves[slavePos].command);
+		Ecris_Wireless((uint8_t*)CMD, 4);
+		
+		sendFlag = 1;
+	}
+	else
+	{
+		if(receivedWireless)
 		{
-			if(ind.data[0] == 'S' && ind.data[1] == slaves[slavePos].ID && ind.data[13] == 'E')
+			if(ind.data[0] == 'S' && ind.data[1] == slaves[slavePos].ID && ind.data[2] == slaves[slavePos].command && ind.data[13] == 'E')
 			{
-				slaves[ind.data[1]].data.temp = ind.data[3];
-				slaves[ind.data[1]].data.mouv = ind.data[4];
-				memcpy(slaves[ind.data[1]].data.lon, ind.data + 5, 4);
-				memcpy(slaves[ind.data[1]].data.lat, ind.data + 9, 4);
-				break;
+				slaves[slavePos].state = ind.data[2];
+				slaves[slavePos].data.temp = ind.data[3];
+				slaves[slavePos].data.mouv = ind.data[4];
+				memcpy(slaves[slavePos].data.lon, ind.data + 5, 4);
+				memcpy(slaves[slavePos].data.lat, ind.data + 9, 4);
+				
+				timeBeforeTimeout = 0;
+				slavePos = (slavePos + 1) % slaveCount;
+				sendFlag = 0;
+				
+				slaves[slavePos].command = 'F';
 			}
 			receivedWireless = 0;
 		}
 		timeBeforeTimeout++;
+	
+		if(timeBeforeTimeout >= 5000)
+		{
+			timeBeforeTimeout = 0;
+			slavePos = (slavePos + 1) % slaveCount;
+			sendFlag = 0;
+		}
 	}
 	
-	if(timeBeforeTimeout < 300)
-	{
-			slaves[slavePos].command[0] = 0;
-	}
-	
-	slavePos++;
-	
-	if (slavePos >= slaveCount) slavePos = 0;
-	
-	if(slaves[slavePos].command[0] != 0)
-	{
-		Ecris_Wireless((uint8_t*)slaves[slavePos].command, sizeof(slaves[slavePos].command)/sizeof(slaves[slavePos].command[0]));
-	}
-	else
-	{
-		char defaultCMD[4];
-		sprintf(defaultCMD, "S%cFE", slaves[slavePos].ID);
-		Ecris_Wireless((uint8_t*)defaultCMD, 4);
-	}
-	
-//	while (TIMER_COUNT > TCNT0){};
-//	TCNT0 = 0;
+	 // while (TIMER_COUNT_LOOP > TCNT0){};
+	 // TCNT0 = 0;
 }
 
 
@@ -252,9 +243,9 @@ int main(void)
   
   slaveCount = 2;
   slaves[0].ID = 1;
-  slaves[0].command[0] = 0;
+  slaves[0].command = 'F';
   slaves[1].ID = 2;
-  slaves[1].command[0] = 0;
+  slaves[1].command = 'F';
    
   while (1)
   {
@@ -274,6 +265,14 @@ int main(void)
 *****************************************************************************/
 void SYS_Init(void)
 {
+	//init antenne externe
+	ANT_DIV |= (1<<ANT_EXT_SW_EN); //active le mode manuel pour antenne
+	ANT_DIV |= (1<<ANT_CTRL0);
+	ANT_DIV &= ~(1<<ANT_CTRL1); //Passe sur antenne externe
+	
+	//ANT_DIV |= (1<<ANT_CTRL1);
+	//ANT_DIV &= ~(1<<ANT_CTRL0); //Passe sur antenne interne
+	
 	receivedWireless = 0;
 	wdt_disable(); 
 	init_UART();
