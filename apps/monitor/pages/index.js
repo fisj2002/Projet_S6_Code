@@ -1,19 +1,12 @@
 const electron = require('electron');
 const fs = require('fs');
+const equal = require('deep-equal');
 
 var card = fs.readFileSync('pages/cards.html', { encoding: 'utf8' });
-var loader;
-var untouched = true;
+var loader = fs.readFileSync('pages/loader.html', { encoding: 'utf8' });
 
-// Loading loader
-fs.readFile('pages/loader.html', { encoding: 'utf8' }, (err, file) => {
-    if (untouched)
-    {
-        document.getElementById('map-tab').innerHTML = file;
-        document.getElementById('mosaic-tab').innerHTML = file;
-    }
-    loader = file;
-})
+var interfaceListSaved = [];
+var currentInterfaceSaved;
 
 // Wait for data reception
 electron.ipcRenderer.on('slave-list', (event, slaveList) => {
@@ -62,9 +55,49 @@ electron.ipcRenderer.on('slave-list', (event, slaveList) => {
                 slaveList[index].movement ? 'red' : 'black';
         }
     }
-    else if (document.getElementsByClassName('hive-card').length > 0)
+    else
+    {
         document.getElementById('mosaic-tab').innerHTML = loader;
+        document.getElementById('map-tab').innerHTML = loader;
+    }
 });
+
+electron.ipcRenderer.on('interface-list', (event, interfaceList, current) => {
+    
+    // Only execute if the selection has changed
+    if (!(equal(interfaceList, interfaceListSaved) && equal(current, currentInterfaceSaved)))
+    {
+        let selector = document.createElement("select");
+
+        if(interfaceList.length <= 0)
+        {
+            let element = document.createElement("option");
+            element.disabled = true;
+            element.setAttribute('selected',true)
+            element.appendChild(document.createTextNode("No interface available"));
+            selector.appendChild(element);           
+        }
+        else
+        {
+            interfaceList.forEach((interface)=>{
+                let element = document.createElement("option");
+                if (current.comName == interface.comName)
+                    element.setAttribute('selected',true);
+                element.appendChild(document.createTextNode(`${interface.name} (${interface.comName})`));
+                selector.appendChild(element);
+            })
+        }
+
+        let container = document.getElementById("interface-selector");
+        container.replaceChild(selector, container.childNodes[1])
+
+        var elems = document.querySelectorAll('select');
+        M.FormSelect.init(elems, {});
+    }
+
+    interfaceListSaved = interfaceList;
+    currentInterfaceSaved = current;
+})
 
 // Instruct the main process to start sending data
 window.onload = ()=>{

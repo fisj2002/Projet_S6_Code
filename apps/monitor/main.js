@@ -1,7 +1,7 @@
 const electron = require('electron');
 const BeeInterface = require('./bee/BeeInterface');
 
-const REFRESH_INTERVAL_MS = 10000;
+const REFRESH_INTERVAL_MS = 1000;
 
 let mainWindow;
 let mainWindowReady = false;
@@ -15,6 +15,7 @@ let hives = [];
 // Refresh data from hardware periodically
 setInterval(refreshHardware, REFRESH_INTERVAL_MS);
 
+// Open main window
 electron.app.on('ready', () => {
     mainWindow = new electron.BrowserWindow({
         icon: './assets/icons/win/bee.ico',
