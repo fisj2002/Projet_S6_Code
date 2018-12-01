@@ -10,7 +10,10 @@ BeeInterface.listInterfaces().then((list)=>{
 
     beeInterface = new BeeInterface(list[0].comName)
 
-    beeInterface.update();
+    beeInterface.update().then(()=>{electron.app.quit()}).catch((error)=>{
+        console.log(error)
+        electron.app.quit()
+    });
 
 
     // beeInterface.update().then(()=>{
@@ -18,4 +21,6 @@ BeeInterface.listInterfaces().then((list)=>{
     // }).catch((error)=>{
     //     console.log(error)
     // });
-})
+}).catch((error)=>{
+    console.log(error)
+    electron.app.quit()});
