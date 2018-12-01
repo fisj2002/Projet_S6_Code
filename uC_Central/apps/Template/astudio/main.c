@@ -134,18 +134,32 @@ static void APP_TaskHandler(void)
 		
 		switch (receivedCommand[1])
 		{
-			case 'A':
-			case 'D':
-			{
-				char check;
-				ExtractRxUart(GetUART1(), &check, 1);
-				if (check == 'E')
-				{
-					SendnUart(GetUART1(), &receivedUART, 1);
-					sprintf(slaves[receivedCommand[0]-1].command, "S%c%cE", receivedCommand[0], receivedCommand[1]);
-				}
-				break;
-			}
+			//case 'A':
+			//case 'D':
+			//{
+				//char check;
+				//ExtractRxUart(GetUART1(), &check, 1);
+				//if (check == 'E')
+				//{
+					//SendnUart(GetUART1(), &receivedUART, 1);
+					//sprintf(slaves[receivedCommand[0]-1].command, "S%c%cE", receivedCommand[0], receivedCommand[1]);
+				//}
+				//break;
+			//}
+			//case 'F':
+			//{
+				//char check;
+				//ExtractRxUart(GetUART1(), &check, 1);
+				//if (check == 'E')
+				//{
+					//char mess[15];
+					//sprintf(mess, "S%cF%c%c00000000E", slaves[receivedCommand[0]-1].ID, slaves[receivedCommand[0]-1].data.temp, slaves[receivedCommand[0]-1].data.mouv);
+					//memcpy(mess + 5, slaves[receivedCommand[0]-1].data.lon, 4);
+					//memcpy(mess + 9, slaves[receivedCommand[0]-1].data.lat, 4);
+					//SendnUart(GetUART1(), mess, 14);
+				//}
+				//break;
+			//}
 			case 'L':
 			{
 				char check;
@@ -184,9 +198,9 @@ static void APP_TaskHandler(void)
 			}
 		}
 	}
-	
+
 	int timeBeforeTimeout = 0;
-	while(timeBeforeTimeout < 16000)
+	while(timeBeforeTimeout < 300)
 	{	
 		PHY_TaskHandler();
 		if(receivedWireless == 1)
@@ -195,15 +209,8 @@ static void APP_TaskHandler(void)
 			{
 				slaves[ind.data[1]].data.temp = ind.data[3];
 				slaves[ind.data[1]].data.mouv = ind.data[4];
-				for (int i = 0; i <= 3; i++) 
-				{
-					slaves[ind.data[1]].data.lon[i] = ind.data[5 + i];
-				}
-				for (int i = 0; i <= 3; i++)
-				{
-					slaves[ind.data[1]].data.lat[i] = ind.data[9 + i];
-				}
-				SendUart(GetUART1(), ind.data);
+				memcpy(slaves[ind.data[1]].data.lon, ind.data + 5, 4);
+				memcpy(slaves[ind.data[1]].data.lat, ind.data + 9, 4);
 				break;
 			}
 			receivedWireless = 0;
@@ -211,7 +218,7 @@ static void APP_TaskHandler(void)
 		timeBeforeTimeout++;
 	}
 	
-	if(timeBeforeTimeout < 16000)
+	if(timeBeforeTimeout < 300)
 	{
 			slaves[slavePos].command[0] = 0;
 	}
@@ -231,8 +238,8 @@ static void APP_TaskHandler(void)
 		Ecris_Wireless((uint8_t*)defaultCMD, 4);
 	}
 	
-	while (TIMER_COUNT > TCNT0){};
-	TCNT0 = 0;
+//	while (TIMER_COUNT > TCNT0){};
+//	TCNT0 = 0;
 }
 
 
