@@ -26,8 +26,7 @@
                 <li>
                     <div class="collapsible-header">
                         <i class="material-icons">wb_sunny</i>
-                        Température
-                        <span class="badge"><span id="quick-temp">~</span> °C</span>
+                        Température: <span id="quick-temp" class="left-buffed">~</span> °C
                     </div>
                     <div class="collapsible-body">
 
@@ -35,11 +34,44 @@
                 </li>
                 <li>
                     <div class="collapsible-header">
+                        <i class="material-icons">link</i>
+                        Connexion:
+                        <i class="material-icons left-buffed">signal_wifi_off</i>
+                    </div>
+                    <div class="collapsible-body"><span>Lorem ipsum dolor sit amet.</span></div>
+                </li>
+                <li>
+                    <div class="collapsible-header">
                         <i class="material-icons">gps_fixed</i>
-                        Position
-                        <span class="badge">
-                            <span id="quick-long">~</span> °
-                            <span id="quick-lat">~</span> °
+                        Position:
+                        <span class="left-buffed"> ~ ° ~ °</span>
+                    </div>
+                    <div class="collapsible-body"><span>Lorem ipsum dolor sit amet.</span></div>
+                </li>
+                <li>
+                    <div class="collapsible-header">
+                        <i class="material-icons">notifications</i>
+                        Alertes
+                        <span class="left-buffed">
+                            <span class="badge new" id="quick-alert"></span>
+                        </span>
+
+                    </div>
+                    <div class="collapsible-body"><span>Lorem ipsum dolor sit amet.</span></div>
+                </li>
+                <li>
+                    <div class="collapsible-header">
+                        <i class="material-icons">whatshot</i>
+                        Actuateur:
+                        <span class="left-buffed">
+                            <div class="switch">
+                                <label>
+                                    Off
+                                    <input class="card-actuator" type="checkbox">
+                                    <span class="lever"></span>
+                                    On
+                                </label>
+                            </div>
                         </span>
                     </div>
                     <div class="collapsible-body"><span>Lorem ipsum dolor sit amet.</span></div>
@@ -48,28 +80,22 @@
                     <div class="collapsible-header">
                         <i class="material-icons">videocam</i>
                         Détecteur de mouvement
-                        <span class="badge">~</span>
+                        <i class="material-icons left-buffed">signal_wifi_off</i>
                     </div>
                     <div class="collapsible-body"><span>Lorem ipsum dolor sit amet.</span></div>
                 </li>
                 <li>
                     <div class="collapsible-header">
-                        <i class="material-icons">notifications</i>
-                        Alertes
-                        <span class="badge" id="quick-alert">
-                            0
-                        </span>
+                        <i class="material-icons">list</i>Logs
                     </div>
-                    <div class="collapsible-body"><span>Lorem ipsum dolor sit amet.</span></div>
-                </li>
-                <li>
-                    <div class="collapsible-header"><i class="material-icons">list</i>Logs</div>
                     <div class="collapsible-body"><span>Lorem ipsum dolor sit amet.</span></div>
                 </li>
             </ul>
         </div>
     </main>
 
+    <!--Application scripts-->
+    <script type="text/javascript" src="hive.js"></script>
     <!--JavaScript at end of body for optimized loading-->
     <script type="text/javascript" src="../node_modules/materialize-css/dist/js/materialize.js"></script>
     <!--Collapsible element Intializer-->
