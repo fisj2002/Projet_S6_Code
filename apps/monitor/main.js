@@ -28,7 +28,7 @@ electron.app.on('ready', () => {
 
 electron.ipcMain.on('main-window-ready', () => {
     mainWindowReady = true;
-    updateMain();
+    updateWindows();
 })
 
 
@@ -41,7 +41,7 @@ electron.ipcMain.on('actuator-order', (event, slaveId, state) => {
         promise = beeInterface.disableActuator(slaveId)
 
     promise.then(() => {
-        updateMain();
+        updateWindows();
     })
 })
 
@@ -56,6 +56,7 @@ electron.ipcMain.on('open-hive', (event, slaveId) => {
             title: `Ruche # ${slaveId}`,
         });
         hiveWindows[slaveId].loadFile('pages/hive.html');
+        hiveWindows[slaveId].webContents.on('did-finish-load', () => { updateWindows(); })
         hiveWindows[slaveId].on('closed', () => { hiveWindows[slaveId] = null })
     }
 })
@@ -63,10 +64,16 @@ electron.ipcMain.on('open-hive', (event, slaveId) => {
 // Start checking hardware
 refreshHardware();
 
-// Send main window updated data
-function updateMain() {
+// Send windows updated data
+function updateWindows() {
     mainWindow.webContents.send('slave-list', beeInterface ? beeInterface.getSlaves() : []);
     mainWindow.webContents.send('interface-list', availableInterfaces, chosenInterface);
+
+    // Send data to every hive
+    hiveWindows.forEach((hiveWindow, index) => {
+        if (hiveWindow)
+            hiveWindow.webContents.send('hive-data', index, beeInterface.getHistoric(index));
+    })
 }
 
 function refreshHardware() {
@@ -93,13 +100,13 @@ function refreshHardware() {
 function queryHardware() {
     beeInterface.update().then(() => {
         if (mainWindowReady)
-            updateMain();
+            updateWindows();
     }).catch((error) => {
         console.log("Failed to connect to master");
         if (chosenInterface.name.match(/arduino/i)) {
             console.log("Arduino reset delay ?");
         }
         if (mainWindowReady)
-            updateMain();
+            updateWindows();
     });
 }

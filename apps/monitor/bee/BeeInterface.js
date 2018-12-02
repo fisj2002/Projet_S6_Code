@@ -75,9 +75,10 @@ class BeeInterface extends EventEmitter
             if (! this._hives[message.sourceId])
                 this._hives[message.sourceId] = new Hive(message.sourceId);
 
-            this._hives[message.sourceId].addEvent(message);
             if(dissconnect)
                 this._hives[message.sourceId].addConnectionLost();
+            else
+                this._hives[message.sourceId].addEvent(message);
         }
 
         // Call the callback of the first matching request

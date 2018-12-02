@@ -13,9 +13,9 @@ i.tab-icon {
     vertical-align: -30%;
 }
 
-.no-margin{
-  margin-bottom: 0px;
-  margin-top: 0px;
+.no-margin {
+    margin-bottom: 0px;
+    margin-top: 0px;
 }
 
 .center {
@@ -33,4 +33,8 @@ i.tab-icon {
 
 .left-buffed {
     margin-left: 20px
+}
+
+.dd-arrow {
+    text-align: right
 }

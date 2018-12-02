@@ -31,7 +31,7 @@ class Hive
                 eventType = 'Sensors reading';
                 break;
             case settings.prot.ACTUATOR_OFF_COMMAND:
-                eventType = 'Actuator disbled';
+                eventType = 'Actuator disabled';
                 this.actuatorEnabled = false;
                 break;
             case settings.prot.ACTUATOR_ON_COMMAND:
