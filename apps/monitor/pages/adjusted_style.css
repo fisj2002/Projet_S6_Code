@@ -38,3 +38,8 @@ i.tab-icon {
 .dd-arrow {
     text-align: right
 }
+
+.scrollable {
+    height: 400px;
+    overflow-y: auto;
+}

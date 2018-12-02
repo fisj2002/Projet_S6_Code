@@ -18,7 +18,7 @@ setInterval(refreshHardware, REFRESH_INTERVAL_MS);
 // Open main window
 electron.app.on('ready', () => {
     mainWindow = new electron.BrowserWindow({
-        icon: './assets/icons/win/bee.ico',
+        icon: './assets/icons/win/beewatch.ico',
         height: 800,
         width: 1000
     });

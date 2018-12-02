@@ -1,19 +1,17 @@
 const settings = require('./settings');
 
 
-class Hive
-{
+class Hive {
     /**
      * Builds the hive object
      * @param {Numer} id Identification of the hive
      */
-    constructor(id)
-    {
+    constructor(id) {
         this.id = id;
         this.connection = true;
         this.actuatorEnabled = false;
         this.log = [
-            {event: 'Hive discovery', time: Date.now()}
+            { event: settings.NEW_HIVE_EVENT, time: Date.now() }
         ];
     }
 
@@ -21,25 +19,23 @@ class Hive
      * Add the incoming transmission to the event log
      * @param {Object} message Adds an event to the hive log
      */
-    addEvent(message)
-    {
+    addEvent(message) {
         var eventType = '';
 
-        switch (message.command)
-        {
+        switch (message.command) {
             case settings.prot.SENSORS_COMMAND:
-                eventType = 'Sensors reading';
+                eventType = settings.SENSOR_EVENT;
                 break;
             case settings.prot.ACTUATOR_OFF_COMMAND:
-                eventType = 'Actuator disabled';
+                eventType = settings.ACTUATOR_OFF_EVENT;
                 this.actuatorEnabled = false;
                 break;
             case settings.prot.ACTUATOR_ON_COMMAND:
-                eventType = 'Actuator enabled';
+                eventType = settings.ACTUATOR_ON_EVENT;
                 this.actuatorEnabled = true;
                 break;
             case settings.prot.ALERT_COMMAND:
-                eventType = 'Alert raised';
+                eventType = settings.ALERT_EVENT;
                 break;
             default:
                 throw `Invalid operation: ${message.command}`;
@@ -60,11 +56,9 @@ class Hive
     /**
      * Inserts a connection loss to the hive
      */
-    addConnectionLost()
-    {
-        if (this.connection == true)
-        {
-            this.log.push({event: 'connection lost', time: Date.now()});
+    addConnectionLost() {
+        if (this.connection == true) {
+            this.log.push({ event: settings.CONNECTION_LOST_EVENT, time: Date.now() });
             this.connection = false;
         }
     }
@@ -73,15 +67,12 @@ class Hive
      * Create a shorter version of the object with only the most recent of data
      * @returns Concise object with most recent data
      */
-    getResume()
-    {
+    getResume() {
         var lastDataLog = {};
 
-        for(var i = this.log.length-1; i >= 0; --i)
-        {
+        for (var i = this.log.length - 1; i >= 0; --i) {
             // Find the first entry with usable data
-            if (this.log[i].temperature != undefined)
-            {
+            if (this.log[i].temperature != undefined) {
                 lastDataLog = this.log[i];
                 break;
             }
@@ -91,7 +82,7 @@ class Hive
             id: this.id,
             connectionActive: this.connection,
             actuatorEnabled: this.actuatorEnabled,
-            
+
             temperature: lastDataLog.temperature,
             longitude: lastDataLog.longitude,
             latitude: lastDataLog.latitude,

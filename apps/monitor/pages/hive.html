@@ -31,22 +31,25 @@
                         <span class="badge"><i class="material-icons flipper">arrow_drop_down</i></span>
                     </div>
                     <div class="collapsible-body">
+                        <canvas id="temp-chart" width="100%"></canvas>
                     </div>
                 </li>
                 <li>
                     <div class="collapsible-header">
                         <i class="material-icons">link</i>
                         Connexion:
-                        <i class="material-icons left-buffed">signal_wifi_off</i>
+                        <i id="quick-connexion" class="material-icons left-buffed">signal_wifi_off</i>
                         <span class="badge"><i class="material-icons flipper">arrow_drop_down</i></span>
                     </div>
-                    <div class="collapsible-body"><span>Lorem ipsum dolor sit amet.</span></div>
+                    <div class="collapsible-body">
+                        <canvas id="connexion-chart" width="100%"></canvas>
+                    </div>
                 </li>
                 <li>
                     <div class="collapsible-header">
                         <i class="material-icons">gps_fixed</i>
                         Position:
-                        <span class="left-buffed"> ~ ° ~ °</span>
+                        <span id="quick-location" class="left-buffed"> ~ ° ~ °</span>
                         <span class="badge"><i class="material-icons flipper">arrow_drop_down</i></span>
                     </div>
                     <div class="collapsible-body"><span>Lorem ipsum dolor sit amet.</span></div>
@@ -78,16 +81,20 @@
                         </span>
                         <span class="badge"><i class="material-icons flipper">arrow_drop_down</i></span>
                     </div>
-                    <div class="collapsible-body"><span>Lorem ipsum dolor sit amet.</span></div>
+                    <div class="collapsible-body">
+                        <canvas id="actuator-chart" width="100%"></canvas>
+                    </div>
                 </li>
                 <li>
                     <div class="collapsible-header">
                         <i class="material-icons">videocam</i>
                         Détecteur de mouvement
-                        <i class="material-icons left-buffed">signal_wifi_off</i>
+                        <i id="quick-movement" class="material-icons left-buffed">signal_wifi_off</i>
                         <span class="badge"><i class="material-icons flipper">arrow_drop_down</i></span>
                     </div>
-                    <div class="collapsible-body"><span>Lorem ipsum dolor sit amet.</span></div>
+                    <div class="collapsible-body">
+                        <canvas id="movement-chart" width="100%"></canvas>
+                    </div>
                 </li>
                 <li>
                     <div class="collapsible-header">
@@ -95,7 +102,21 @@
                         Logs
                         <span class="badge"><i class="material-icons flipper">arrow_drop_down</i></span>
                     </div>
-                    <div class="collapsible-body"><span>Lorem ipsum dolor sit amet.</span></div>
+                    <div class="collapsible-body">
+                        <div class="scrollable">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Time</th>
+                                        <th>Message</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="message-list">
+                                    
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
                 </li>
             </ul>
         </div>

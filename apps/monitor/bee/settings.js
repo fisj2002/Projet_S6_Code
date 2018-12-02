@@ -1,12 +1,11 @@
-module.exports = 
-{
-    DEFAULT_BAUD_RATE : 9600,
+module.exports = {
+    DEFAULT_BAUD_RATE: 9600,
     DEVICE_FILE_PATH: './bee/knownDevices.json',
-    
+
     REQUEST_TIMEOUT_MS: 1000,
 
     // Protocol settings
-    prot:{
+    prot: {
         MASTER_ADDR: 0xFF,
 
         START_BYTE: 'S'.charCodeAt(0),
@@ -19,5 +18,13 @@ module.exports =
         ACTUATOR_OFF_COMMAND: 'D'.charCodeAt(0),
         ALERT_COMMAND: 'N'.charCodeAt(0),
         DISCONNECTED_SIGNAL: 'X'.charCodeAt(0),
-    }
+    },
+
+    // Event codes
+    NEW_HIVE_EVENT: 'Hive discovery',
+    SENSOR_EVENT: 'Sensors reading',
+    ACTUATOR_OFF_EVENT: 'Actuator disabled',
+    ACTUATOR_ON_EVENT: 'Actuator enabled',
+    ALERT_EVENT: 'Alert raised',
+    CONNECTION_LOST_EVENT: 'Connection lost',
 }

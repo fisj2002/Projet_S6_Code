@@ -12,6 +12,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "chart.js": "^2.7.3",
     "deep-equal": "^1.0.1",
     "materialize-css": "^1.0.0-rc.2",
     "round-to": "^3.0.0",
