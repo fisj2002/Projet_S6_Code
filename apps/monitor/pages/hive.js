@@ -28,6 +28,12 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 });
 
+// Dismiss alerts
+document.getElementById('alert-element').onclick = () => {
+    document.getElementById('quick-alert').classList.remove('new');
+    electron.ipcRenderer.send('alerts-dismissed', hiveId);
+}
+
 // Activate actuator
 let actuatorElement = document.getElementById('actuator-switch');
 actuatorElement.onclick = () => {
@@ -38,7 +44,7 @@ actuatorElement.onclick = () => {
 // Failed actuator command
 electron.ipcRenderer.on('actuator-failed', (event, slaveId, desiredState, error) => {
     let checkbox = document.getElementById('actuator-switch');
-    M.toast({html: `Failed to ${desiredState?'enable':'disable'} actuator on hive # ${slaveId}: ${error}`})
+    M.toast({ html: `Failed to ${desiredState ? 'enable' : 'disable'} actuator on hive # ${slaveId}: ${error}` })
 
     checkbox.checked = !desiredState;
     checkbox.enabled = true;
@@ -68,6 +74,18 @@ electron.ipcRenderer.on('hive-data', (event, slaveId, history) => {
                 console.log('hey')
                 break;
             case settings.ALERT_EVENT:
+                let alertList = document.getElementById('alert-list');
+                let tableRow = document.createElement('tr');
+                let timeColumn = document.createElement('td');
+                timeColumn.innerHTML = new Date(history[appliedLog].time).toLocaleString()
+                let messageColumn = document.createElement('td');
+                let messsage = document.createElement('pre');
+                messsage.innerHTML = JSON.stringify(history[appliedLog], undefined, 4);
+                messageColumn.appendChild(messsage);
+                tableRow.appendChild(timeColumn)
+                tableRow.appendChild(messageColumn)
+                alertList.insertBefore(tableRow, alertList.childNodes[0]);
+                document.getElementById('quick-alert').classList.add('new');
                 lastValidSensorsEventIndex = appliedLog;
                 break;
             case settings.SENSOR_EVENT:

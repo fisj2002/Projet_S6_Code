@@ -42,7 +42,7 @@ electron.ipcMain.on('actuator-order', (event, slaveId, desiredState) => {
 
     promise.then(() => {
         updateWindows();
-    }).catch((error) =>{
+    }).catch((error) => {
         // Inform windows that the request failed
         event.sender.send('actuator-failed', slaveId, desiredState, error);
     })
@@ -62,6 +62,12 @@ electron.ipcMain.on('open-hive', (event, slaveId) => {
         hiveWindows[slaveId].webContents.on('did-finish-load', () => { updateWindows(); })
         hiveWindows[slaveId].on('closed', () => { hiveWindows[slaveId] = null })
     }
+})
+
+// Dismissing alerts
+electron.ipcMain.on('alerts-dismissed', (event, slaveId) => {
+    // retransmit to main window
+    mainWindow.webContents.send('ack-alert', slaveId)
 })
 
 // Start checking hardware
@@ -89,6 +95,7 @@ function refreshHardware() {
             beeInterface = new BeeInterface(chosenInterface.comName);
             beeInterface.on('alert', (slaveId) => {
                 mainWindow.webContents.send('alert', slaveId);
+                updateWindows();
             });
             beeInterface.once('ready', () => {
                 queryHardware();

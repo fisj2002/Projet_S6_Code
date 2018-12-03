@@ -54,16 +54,29 @@
                     </div>
                     <div class="collapsible-body"><span>Lorem ipsum dolor sit amet.</span></div>
                 </li>
-                <li>
+                <li id="alert-element">
                     <div class="collapsible-header">
                         <i class="material-icons">notifications</i>
                         Alertes
                         <span class="left-buffed">
-                            <span class="badge new" id="quick-alert"></span>
+                            <span class="badge" id="quick-alert"></span>
                         </span>
                         <span class="badge"><i class="material-icons flipper">arrow_drop_down</i></span>
                     </div>
-                    <div class="collapsible-body"><span>Lorem ipsum dolor sit amet.</span></div>
+                    <div class="collapsible-body">
+                        <div class="scrollable">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Time</th>
+                                        <th>Message</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="alert-list">
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
                 </li>
                 <li>
                     <div class="collapsible-header">
@@ -112,7 +125,7 @@
                                     </tr>
                                 </thead>
                                 <tbody id="message-list">
-                                    
+
                                 </tbody>
                             </table>
                         </div>
