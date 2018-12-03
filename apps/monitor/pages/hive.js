@@ -3,6 +3,7 @@ const Graph = require('./graph')
 const settings = require('../bee/settings')
 const roundTo = require('round-to')
 
+var hiveId;
 var appliedLog = 0;
 var actuatorEnabled = false;
 var lastValidSensorsEventIndex;
@@ -27,6 +28,22 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 });
 
+// Activate actuator
+let actuatorElement = document.getElementById('actuator-switch');
+actuatorElement.onclick = () => {
+    actuatorElement.disabled = true;
+    electron.ipcRenderer.send('actuator-order', hiveId, actuatorElement.checked)
+}
+
+// Failed actuator command
+electron.ipcRenderer.on('actuator-failed', (event, slaveId, desiredState, error) => {
+    let checkbox = document.getElementById('actuator-switch');
+    M.toast({html: `Failed to ${desiredState?'enable':'disable'} actuator on hive # ${slaveId}: ${error}`})
+
+    checkbox.checked = !desiredState;
+    checkbox.enabled = true;
+})
+
 electron.ipcRenderer.on('hive-data', (event, slaveId, history) => {
 
     // Processing all new packets
@@ -35,13 +52,18 @@ electron.ipcRenderer.on('hive-data', (event, slaveId, history) => {
             case settings.NEW_HIVE_EVENT:
                 connexionChart.addPoint(history[appliedLog].time, true);
                 document.getElementById('hiveID').innerHTML = slaveId;
+                hiveId = slaveId;
                 break;
             case settings.ACTUATOR_OFF_EVENT:
                 actuatorEnabled = false;
+                document.getElementById('actuator-switch').checked = false;
+                document.getElementById('actuator-switch').disabled = false;
                 lastValidSensorsEventIndex = appliedLog;
                 break;
             case settings.ACTUATOR_ON_EVENT:
                 actuatorEnabled = true;
+                document.getElementById('actuator-switch').checked = true;
+                document.getElementById('actuator-switch').disabled = false;
                 lastValidSensorsEventIndex = appliedLog;
                 console.log('hey')
                 break;
@@ -76,7 +98,7 @@ electron.ipcRenderer.on('hive-data', (event, slaveId, history) => {
         timeColumn.innerHTML = new Date(history[appliedLog].time).toLocaleString()
         let messageColumn = document.createElement('td');
         let messsage = document.createElement('pre');
-        messsage.innerHTML = JSON.stringify(history[appliedLog],undefined,4);
+        messsage.innerHTML = JSON.stringify(history[appliedLog], undefined, 4);
         messageColumn.appendChild(messsage);
         tableRow.appendChild(timeColumn)
         tableRow.appendChild(messageColumn)
@@ -89,17 +111,15 @@ electron.ipcRenderer.on('hive-data', (event, slaveId, history) => {
 
         let latitude = history[lastValidSensorsEventIndex].latitude;
         let longitude = history[lastValidSensorsEventIndex].longitude;
-        document.getElementById('quick-location').innerHTML = 
+        document.getElementById('quick-location').innerHTML =
             `${roundTo(Math.abs(latitude), 6)}°${latitude >= 0 ? 'N' : 'S'} \
             ${roundTo(Math.abs(longitude), 6)}°${longitude >= 0 ? 'E' : 'W'}`;
 
-        if(history[lastValidSensorsEventIndex].movement)
-        {
+        if (history[lastValidSensorsEventIndex].movement) {
             document.getElementById('quick-movement').innerHTML = 'directions_walk'
             document.getElementById('quick-movement').classList.add('red-text');
         }
-        else
-        {
+        else {
             document.getElementById('quick-movement').innerHTML = 'visibility_off'
             document.getElementById('quick-movement').classList.remove('red-text');
         }

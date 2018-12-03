@@ -126,6 +126,16 @@ electron.ipcRenderer.on('ack-alert', (event, slaveId) => {
     }
 })
 
+// Checking for failed actuator requests
+electron.ipcRenderer.on('actuator-failed', (event, slaveId, desiredState, error) => {
+    let checkbox = document.getElementById(`hive-${slaveId}`)
+        .getElementsByClassName('card-actuator').item(0);
+    M.toast({html: `Failed to ${desiredState?'enable':'disable'} actuator on hive # ${slaveId}: ${error}`})
+
+    checkbox.checked = !desiredState;
+    checkbox.enabled = true;
+})
+
 // Instruct the main process to start sending data
 window.onload = () => {
     electron.ipcRenderer.send('main-window-ready');

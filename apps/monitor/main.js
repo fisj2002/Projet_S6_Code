@@ -32,16 +32,19 @@ electron.ipcMain.on('main-window-ready', () => {
 })
 
 
-electron.ipcMain.on('actuator-order', (event, slaveId, state) => {
+electron.ipcMain.on('actuator-order', (event, slaveId, desiredState) => {
     let promise;
 
-    if (state)
+    if (desiredState)
         promise = beeInterface.enableActuator(slaveId)
     else
         promise = beeInterface.disableActuator(slaveId)
 
     promise.then(() => {
         updateWindows();
+    }).catch((error) =>{
+        // Inform windows that the request failed
+        event.sender.send('actuator-failed', slaveId, desiredState, error);
     })
 })
 
