@@ -143,6 +143,8 @@ static void APP_TaskHandler(void)
 					memcpy(mess + 5, slaves[receivedCommand[0]-1].data.lon, 4);
 					memcpy(mess + 9, slaves[receivedCommand[0]-1].data.lat, 4);
 					SendnUart(GetUART1(), mess, 14);
+					
+					slaves[receivedCommand[0]-1].command = 'F';
 				}
 				break;
 			}
@@ -214,8 +216,6 @@ static void APP_TaskHandler(void)
 				timeBeforeTimeout = 0;
 				slavePos = (slavePos + 1) % slaveCount;
 				sendFlag = 0;
-				
-				slaves[slavePos].command = 'F';
 			}
 			receivedWireless = 0;
 		}
