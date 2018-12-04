@@ -30,7 +30,9 @@ function initMap() {
 let gmapAPI = document.createElement('script')
 gmapAPI.async = true;
 gmapAPI.defer = true;
-gmapAPI.src = `https://maps.googleapis.com/maps/api/js?key=${fs.readFileSync('./gmaps-api.txt', { encoding: 'utf8' })}&callback=initMap`
+fs.readFile('./gmaps-api.txt', { encoding: 'utf8' }, (err, key)=>{
+    gmapAPI.src = `https://maps.googleapis.com/maps/api/js?key=${key}&callback=initMap`
+})
 document.body.appendChild(gmapAPI)
 
 // Setting up collapsable menu arrows
