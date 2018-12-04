@@ -42,9 +42,18 @@ electron.ipcRenderer.on('slave-list', (event, slaveList) => {
                 slaveList[index].connectionActive ? 'signal_wifi_4_bar' : 'signal_wifi_off';
 
             // Updating position
-            cards.item(index).getElementsByClassName('card-position').item(0).innerHTML =
-                `${roundTo(Math.abs(slaveList[index].latitude), 6)}°${slaveList[index].latitude >= 0 ? 'N' : 'S'} \
-                ${roundTo(Math.abs(slaveList[index].longitude), 6)}°${slaveList[index].longitude >= 0 ? 'E' : 'W'}`;
+            if (slaveList[index].latitude == 1 && slaveList[index].longitude == 1) {
+                let icon = document.createElement('i');
+                icon.classList.add('material-icons', 'left-buffed');
+                icon.innerHTML = 'signal_cellular_off'
+                let text = document.createTextNode('No GPS available');
+                cards.item(index).getElementsByClassName('card-position').item(0).appendChild(text)
+                cards.item(index).getElementsByClassName('card-position').item(0).appendChild(icon)
+            }
+            else
+                cards.item(index).getElementsByClassName('card-position').item(0).innerHTML =
+                    `${roundTo(Math.abs(slaveList[index].latitude), 6)}°${slaveList[index].latitude >= 0 ? 'N' : 'S'} \
+                    ${roundTo(Math.abs(slaveList[index].longitude), 6)}°${slaveList[index].longitude >= 0 ? 'E' : 'W'}`;
 
             // Updating actuator
             let checkbox = cards.item(index).getElementsByClassName('card-actuator').item(0);
@@ -130,7 +139,7 @@ electron.ipcRenderer.on('ack-alert', (event, slaveId) => {
 electron.ipcRenderer.on('actuator-failed', (event, slaveId, desiredState, error) => {
     let checkbox = document.getElementById(`hive-${slaveId}`)
         .getElementsByClassName('card-actuator').item(0);
-    M.toast({html: `Failed to ${desiredState?'enable':'disable'} actuator on hive # ${slaveId}: ${error}`})
+    M.toast({ html: `Failed to ${desiredState ? 'enable' : 'disable'} actuator on hive # ${slaveId}: ${error}` })
 
     checkbox.checked = !desiredState;
     checkbox.enabled = true;

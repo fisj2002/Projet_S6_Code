@@ -21,7 +21,7 @@ var mapMarker;
 function initMap() {
     map = new google.maps.Map(document.getElementById('map'), {
         center: { lat: 45.378216, lng: -71.925923 },
-        zoom: 13,
+        zoom: 14,
         streetViewControl: false,
         gestureHandling: 'none',
     });
@@ -30,7 +30,7 @@ function initMap() {
 let gmapAPI = document.createElement('script')
 gmapAPI.async = true;
 gmapAPI.defer = true;
-fs.readFile('./gmaps-api.txt', { encoding: 'utf8' }, (err, key)=>{
+fs.readFile('./gmaps-api.txt', { encoding: 'utf8' }, (err, key) => {
     gmapAPI.src = `https://maps.googleapis.com/maps/api/js?key=${key}&callback=initMap`
 })
 document.body.appendChild(gmapAPI)
@@ -68,7 +68,7 @@ electron.ipcRenderer.on('actuator-failed', (event, slaveId, desiredState, error)
     M.toast({ html: `Failed to ${desiredState ? 'enable' : 'disable'} actuator on hive # ${slaveId}: ${error}` })
 
     checkbox.checked = !desiredState;
-    checkbox.enabled = true;
+    checkbox.disabled = false;
 })
 
 electron.ipcRenderer.on('hive-data', (event, slaveId, history) => {
@@ -125,9 +125,9 @@ electron.ipcRenderer.on('hive-data', (event, slaveId, history) => {
 
         // Updating sensor graphs
         actuatorChart.addPoint(history[appliedLog].time, actuatorEnabled)
-        if (history[appliedLog].temperature)
+        if (history[appliedLog].temperature != undefined)
             tempChart.addPoint(history[appliedLog].time, history[appliedLog].temperature);
-        if (history[appliedLog].movement)
+        if (history[appliedLog].movement != undefined)
             movementChart.addPoint(history[appliedLog].time, history[appliedLog].movement);
 
         // Adding event to logs
@@ -148,18 +148,29 @@ electron.ipcRenderer.on('hive-data', (event, slaveId, history) => {
     if (lastValidSensorsEventIndex) {
         document.getElementById('quick-temp').innerHTML = history[lastValidSensorsEventIndex].temperature;
 
-        let latitude = history[lastValidSensorsEventIndex].latitude;
-        let longitude = history[lastValidSensorsEventIndex].longitude;
-        document.getElementById('quick-location').innerHTML =
-            `${roundTo(Math.abs(latitude), 6)}°${latitude >= 0 ? 'N' : 'S'} \
+        if (history[lastValidSensorsEventIndex].latitude == 1 && history[lastValidSensorsEventIndex].longitude == 1) {
+            let icon = document.createElement('i');
+            icon.classList.add('material-icons', 'left-buffed');
+            icon.innerHTML = 'signal_cellular_off'
+            let text = document.createTextNode('No GPS available');
+            document.getElementById('quick-location').innerHTML = ''
+            document.getElementById('quick-location').appendChild(text)
+            document.getElementById('quick-location').appendChild(icon)
+        }
+        else {
+            let latitude = history[lastValidSensorsEventIndex].latitude;
+            let longitude = history[lastValidSensorsEventIndex].longitude;
+            document.getElementById('quick-location').innerHTML =
+                `${roundTo(Math.abs(latitude), 6)}°${latitude >= 0 ? 'N' : 'S'} \
             ${roundTo(Math.abs(longitude), 6)}°${longitude >= 0 ? 'E' : 'W'}`;
 
-        // updating map
-        if (map)
-            map.setCenter({ lat: latitude, lng: longitude })
-        if (mapMarker) {
-            mapMarker.setPosition({ lat: latitude, lng: longitude })
-            mapMarker.setVisible(true)
+            // updating map
+            if (map)
+                map.setCenter({ lat: latitude, lng: longitude })
+            if (mapMarker) {
+                mapMarker.setPosition({ lat: latitude, lng: longitude })
+                mapMarker.setVisible(true)
+            }
         }
 
         if (history[lastValidSensorsEventIndex].movement) {
