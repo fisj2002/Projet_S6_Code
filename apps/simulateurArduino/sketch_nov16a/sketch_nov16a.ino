@@ -128,12 +128,12 @@ void slaveResponse(byte slaveId, byte responseType)
   float* longitude = (float*)longitudeBytes;
 
   *latitude = 45.0;
-  *longitude = 72.0;
+  *longitude = -72.0;
 
   Serial.write(temperature);
   Serial.write(mouvement);
-  Serial.write(longitudeBytes, sizeof(float));
   Serial.write(latitudeBytes, sizeof(float));
+  Serial.write(longitudeBytes, sizeof(float));
   
   Serial.write(prot_suffix);
 }

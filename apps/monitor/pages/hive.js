@@ -2,6 +2,7 @@ const electron = require('electron');
 const Graph = require('./graph')
 const settings = require('../bee/settings')
 const roundTo = require('round-to')
+const fs = require('fs')
 
 var hiveId;
 var appliedLog = 0;
@@ -13,6 +14,24 @@ var tempChart = new Graph(document.getElementById('temp-chart'), 'analog', 'Temp
 var connexionChart = new Graph(document.getElementById('connexion-chart'), 'digital', 'Connecté (I/O)');
 var actuatorChart = new Graph(document.getElementById('actuator-chart'), 'digital', 'État (Activé/Désactivé');
 var movementChart = new Graph(document.getElementById('movement-chart'), 'digital', 'État (Activé/Désactivé');
+
+// Initializing map
+var map;
+var mapMarker;
+function initMap() {
+    map = new google.maps.Map(document.getElementById('map'), {
+        center: { lat: 45.378216, lng: -71.925923 },
+        zoom: 13,
+        streetViewControl: false,
+        gestureHandling: 'none',
+    });
+    mapMarker = new google.maps.Marker({ map: map, visible: false });
+}
+let gmapAPI = document.createElement('script')
+gmapAPI.async = true;
+gmapAPI.defer = true;
+gmapAPI.src = `https://maps.googleapis.com/maps/api/js?key=${fs.readFileSync('./gmaps-api.txt', { encoding: 'utf8' })}&callback=initMap`
+document.body.appendChild(gmapAPI)
 
 // Setting up collapsable menu arrows
 document.addEventListener('DOMContentLoaded', function () {
@@ -132,6 +151,14 @@ electron.ipcRenderer.on('hive-data', (event, slaveId, history) => {
         document.getElementById('quick-location').innerHTML =
             `${roundTo(Math.abs(latitude), 6)}°${latitude >= 0 ? 'N' : 'S'} \
             ${roundTo(Math.abs(longitude), 6)}°${longitude >= 0 ? 'E' : 'W'}`;
+
+        // updating map
+        if (map)
+            map.setCenter({ lat: latitude, lng: longitude })
+        if (mapMarker) {
+            mapMarker.setPosition({ lat: latitude, lng: longitude })
+            mapMarker.setVisible(true)
+        }
 
         if (history[lastValidSensorsEventIndex].movement) {
             document.getElementById('quick-movement').innerHTML = 'directions_walk'

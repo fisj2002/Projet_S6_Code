@@ -43,3 +43,7 @@ i.tab-icon {
     height: 400px;
     overflow-y: auto;
 }
+
+#map {
+    height: 400px;
+  }

@@ -46,13 +46,15 @@
                     </div>
                 </li>
                 <li>
-                    <div class="collapsible-header">
+                    <div id="map-dropdown" class="collapsible-header">
                         <i class="material-icons">gps_fixed</i>
                         Position:
                         <span id="quick-location" class="left-buffed"> ~ ° ~ °</span>
                         <span class="badge"><i class="material-icons flipper">arrow_drop_down</i></span>
                     </div>
-                    <div class="collapsible-body"><span>Lorem ipsum dolor sit amet.</span></div>
+                    <div class="collapsible-body">
+                        <div id="map"></div>
+                    </div>
                 </li>
                 <li id="alert-element">
                     <div class="collapsible-header">
@@ -141,6 +143,7 @@
     <script type="text/javascript" src="../node_modules/materialize-css/dist/js/materialize.js"></script>
     <!--Collapsible element Intializer-->
     <script type="text/javascript">M.AutoInit();</script>
+    
 </body>
 
 </html>
