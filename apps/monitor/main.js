@@ -55,7 +55,7 @@ electron.ipcMain.on('open-hive', (event, slaveId) => {
     }
     else {
         hiveWindows[slaveId] = new electron.BrowserWindow({
-            icon: './assets/icons/win/bee.ico',
+            icon: './assets/icons/win/beewatch.ico',
             title: `Ruche # ${slaveId}`,
         });
         hiveWindows[slaveId].loadFile('pages/hive.html');
