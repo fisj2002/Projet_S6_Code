@@ -54,6 +54,8 @@
 
 /*- Definitions ------------------------------------------------------------*/
 // Put your preprocessor definitions here
+#define EXTERNAL_ANTENNA 0
+#define INTERNAL_ANTENNA 1
 
 /*- Types ------------------------------------------------------------------*/
 // Put your type definitions here
@@ -77,6 +79,7 @@ char Lis_UART(void);
 void Ecris_UART(char data);
 void Ecris_UART_string(char const * data, ...);
 void init_UART(void);
+void init_ANT_Ext(char mode);
 void SYS_Init(void);
 
 /*- Variables --------------------------------------------------------------*/
@@ -266,19 +269,12 @@ int main(void)
 *****************************************************************************/
 void SYS_Init(void)
 {
-	//init antenne externe
-	ANT_DIV |= (1<<ANT_EXT_SW_EN); //active le mode manuel pour antenne
-	ANT_DIV |= (1<<ANT_CTRL0);
-	ANT_DIV &= ~(1<<ANT_CTRL1); //Passe sur antenne externe
-	
-	//ANT_DIV |= (1<<ANT_CTRL1);
-	//ANT_DIV &= ~(1<<ANT_CTRL0); //Passe sur antenne interne
-	
 	receivedWireless = 0;
 	wdt_disable(); 
 	init_UART();
 	init_Timer();
 	PHY_Init(); //initialise le wireless
+	init_ANT_Ext(EXTERNAL_ANTENNA);
 	PHY_SetRxState(1); //TRX_CMD_RX_ON
 }
 //
@@ -349,4 +345,20 @@ void init_UART(void)
 	InitUart_1(BAUD_RATE);
 }
 
-
+void init_ANT_Ext(char mode)
+{
+	
+	//init antenne externe
+	ANT_DIV |= (1<<ANT_EXT_SW_EN); //active le mode manuel pour antenne
+	
+	if (mode == INTERNAL_ANTENNA)
+	{
+		ANT_DIV |= (1<<ANT_CTRL1);
+		ANT_DIV &= ~(1<<ANT_CTRL0); //Passe sur antenne interne
+	}
+	else
+	{
+		ANT_DIV |= (1<<ANT_CTRL0);
+		ANT_DIV &= ~(1<<ANT_CTRL1); //Passe sur antenne externe
+	}
+}
